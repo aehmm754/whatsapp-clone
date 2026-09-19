@@ -1,39 +1,33 @@
 const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database('./whatsapp.db');
+const path = require('path');
 
+const dbPath = path.join(__dirname, 'database.sqlite');
+const db = new sqlite3.Database(dbPath, (err) => {
+  if (err) {
+    console.error('خطأ في الاتصال بقاعدة البيانات:', err.message);
+  } else {
+    console.log('تم الاتصال بقاعدة بيانات SQLite بنجاح');
+  }
+});
+
+// إنشاء الجداول تلقائياً لضمان عدم حدوث أي خطأ عند أول تشغيل
 db.serialize(() => {
-    // جدول المستخدمين
-    db.run(`
+  db.run(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      username TEXT UNIQUE,
-      email TEXT UNIQUE,
-      password TEXT,
-      otp TEXT,
-      is_verified INTEGER DEFAULT 0
+      username TEXT UNIQUE NOT NULL,
+      password TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
 
-    // جدول طلبات المراسلة
-    db.run(`
-    CREATE TABLE IF NOT EXISTS contact_requests (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      sender_id INTEGER,
-      receiver_id INTEGER,
-      status TEXT DEFAULT 'pending',
-      FOREIGN KEY(sender_id) REFERENCES users(id),
-      FOREIGN KEY(receiver_id) REFERENCES users(id)
-    )
-  `);
-
-    // جدول الرسائل
-    db.run(`
+  db.run(`
     CREATE TABLE IF NOT EXISTS messages (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      sender_id INTEGER,
-      receiver_id INTEGER,
+      sender TEXT NOT NULL,
+      receiver TEXT NOT NULL,
       type TEXT DEFAULT 'text',
-      content TEXT,
+      content TEXT NOT NULL,
       timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
