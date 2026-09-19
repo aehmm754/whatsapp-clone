@@ -23,7 +23,7 @@
             overflow: hidden;
         }
 
-        /* شاشة تسجيل الدخول وإنشاء الحساب */
+        /* شاشة تسجيل الدخول والاشتراك */
         .auth-overlay {
             position: fixed;
             inset: 0;
@@ -37,19 +37,19 @@
         .auth-card {
             background: #111b21;
             border: 1px solid #222e35;
-            padding: 35px 25px;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 380px;
+            padding: 30px 25px;
+            border-radius: 14px;
+            width: 92%;
+            max-width: 400px;
             text-align: center;
             color: #e9edef;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
         }
 
-        .auth-card .logo {
-            width: 64px;
-            height: 64px;
-            margin: 0 auto 15px;
+        .auth-card .logo-circle {
+            width: 68px;
+            height: 68px;
+            margin: 0 auto 16px;
             background: #00a884;
             border-radius: 50%;
             display: flex;
@@ -60,20 +60,20 @@
         }
 
         .auth-card h2 {
-            margin-bottom: 20px;
+            margin-bottom: 18px;
             font-size: 22px;
             font-weight: 500;
         }
 
         .auth-card input {
             width: 100%;
-            padding: 12px 15px;
-            margin-bottom: 15px;
+            padding: 12px 14px;
+            margin-bottom: 12px;
             background: #202c33;
             border: 1px solid #2a3942;
             border-radius: 8px;
             color: #e9edef;
-            font-size: 15px;
+            font-size: 14.5px;
             outline: none;
         }
 
@@ -81,7 +81,7 @@
             border-color: #00a884;
         }
 
-        .auth-card button.btn-primary {
+        .auth-card button.btn-main {
             width: 100%;
             padding: 12px;
             background: #00a884;
@@ -89,30 +89,34 @@
             font-weight: bold;
             border: none;
             border-radius: 8px;
-            font-size: 16px;
+            font-size: 15.5px;
             cursor: pointer;
             transition: 0.2s;
+            margin-top: 4px;
         }
 
-        .auth-card button.btn-primary:hover {
+        .auth-card button.btn-main:hover {
             background: #02906f;
         }
 
         .auth-toggle {
-            margin-top: 20px;
-            font-size: 14px;
+            margin-top: 18px;
+            font-size: 13.5px;
             color: #00a884;
             cursor: pointer;
             text-decoration: none;
             display: inline-block;
+            font-weight: 500;
         }
 
-        .alert-msg {
-            padding: 10px;
-            margin-bottom: 15px;
+        .alert-box {
+            padding: 10px 12px;
+            margin-bottom: 14px;
             border-radius: 6px;
             font-size: 13px;
+            line-height: 1.4;
             display: none;
+            text-align: right;
         }
 
         .alert-error {
@@ -129,7 +133,7 @@
             display: block;
         }
 
-        /* الإطار الرئيسي لواتساب */
+        /* الإطار الرئيسي للتطبيق */
         .app-container {
             width: 100%;
             height: 100vh;
@@ -137,9 +141,9 @@
             background: #111b21;
         }
 
-        /* القائمة الجانبية (المحادثات) */
+        /* القائمة الجانبية للمحادثات */
         .sidebar {
-            width: 350px;
+            width: 360px;
             border-left: 1px solid #222e35;
             display: flex;
             flex-direction: column;
@@ -165,17 +169,17 @@
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 18px;
+            font-size: 17px;
         }
 
-        .search-box {
+        .search-bar {
             padding: 8px 12px;
             background: #111b21;
         }
 
-        .search-input {
+        .search-bar input {
             width: 100%;
-            padding: 8px 15px;
+            padding: 8px 14px;
             background: #202c33;
             border: none;
             border-radius: 8px;
@@ -196,7 +200,7 @@
             padding: 12px 16px;
             cursor: pointer;
             border-bottom: 1px solid #222e35;
-            transition: 0.2s;
+            transition: 0.15s;
         }
 
         .user-item:hover,
@@ -204,39 +208,49 @@
             background: #202c33;
         }
 
-        .user-info {
+        .user-details {
             margin-right: 12px;
             flex: 1;
             text-align: right;
         }
 
-        .user-name {
-            font-size: 16px;
+        .user-title {
+            font-size: 15.5px;
             color: #e9edef;
             font-weight: 500;
         }
 
-        .user-status {
-            font-size: 12px;
+        .user-sub {
+            font-size: 12.5px;
             color: #8696a0;
+            margin-top: 2px;
         }
 
-        .online-dot {
-            width: 10px;
-            height: 10px;
+        .dot-green {
+            width: 9px;
+            height: 9px;
             border-radius: 50%;
             background: #00a884;
             display: inline-block;
             margin-left: 5px;
         }
 
-        /* نافذة الدردشة الرئيسية */
+        /* شاشة الشات الرئيسية */
         .chat-area {
             flex: 1;
             display: flex;
             flex-direction: column;
             background: #0b141a;
             position: relative;
+        }
+
+        .chat-empty {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #8696a0;
         }
 
         .chat-header {
@@ -248,20 +262,10 @@
             border-bottom: 1px solid #222e35;
         }
 
-        .chat-header .title {
+        .chat-header .info {
             margin-right: 12px;
             color: #e9edef;
-            font-size: 16px;
-        }
-
-        .chat-empty {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: #8696a0;
-            text-align: center;
+            font-size: 15.5px;
         }
 
         .chat-messages {
@@ -276,7 +280,7 @@
         }
 
         /* فقاعات الرسائل */
-        .msg {
+        .bubble {
             max-width: 65%;
             padding: 8px 12px;
             border-radius: 8px;
@@ -286,47 +290,48 @@
             color: #e9edef;
         }
 
-        .msg.me {
+        .bubble.me {
             align-self: flex-start;
             background: #005c4b;
         }
 
-        .msg.other {
+        .bubble.other {
             align-self: flex-end;
             background: #202c33;
         }
 
-        .msg-time {
+        .bubble-time {
             font-size: 10.5px;
-            color: rgba(255, 255, 255, 0.6);
+            color: rgba(255, 255, 255, 0.55);
             margin-top: 4px;
             text-align: left;
         }
 
-        .msg img {
+        .bubble img {
             max-width: 100%;
             border-radius: 6px;
             margin-top: 5px;
             display: block;
+            cursor: pointer;
         }
 
-        .msg audio {
-            width: 240px;
-            height: 38px;
-            margin-top: 5px;
+        .bubble audio {
+            width: 230px;
+            height: 36px;
+            margin-top: 6px;
             outline: none;
         }
 
-        /* شريط الإدخال والتسجيل */
+        /* شريط الكتابة والتسجيل */
         .chat-footer {
             background: #202c33;
-            padding: 8px 16px;
+            padding: 8px 14px;
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
-        .chat-input {
+        .chat-footer input.text-input {
             flex: 1;
             padding: 10px 16px;
             background: #2a3942;
@@ -337,7 +342,7 @@
             outline: none;
         }
 
-        .btn-icon {
+        .icon-btn {
             background: none;
             border: none;
             color: #8696a0;
@@ -352,11 +357,11 @@
             transition: 0.2s;
         }
 
-        .btn-icon:hover {
+        .icon-btn:hover {
             color: #d1d7db;
         }
 
-        .btn-icon.recording {
+        .icon-btn.recording {
             background: #ef4444 !important;
             color: white !important;
             animation: pulse 1.2s infinite;
@@ -386,11 +391,11 @@
                 width: 100%;
             }
 
-            .app-container.chat-active .sidebar {
+            .app-container.chat-open .sidebar {
                 display: none;
             }
 
-            .app-container.chat-active .chat-area {
+            .app-container.chat-open .chat-area {
                 display: flex;
             }
         }
@@ -399,69 +404,89 @@
 
 <body>
 
-    <!-- شاشة الدخول / إنشاء حساب -->
+    <!-- واجهة الدخول وإنشاء الحساب مع البريد الإلكتروني ورمز التأكيد -->
     <div class="auth-overlay" id="auth-overlay">
         <div class="auth-card">
-            <div class="logo">💬</div>
+            <div class="logo-circle">💬</div>
             <h2 id="auth-title">تسجيل الدخول</h2>
-            <div id="auth-alert" class="alert-msg"></div>
-            <form id="auth-form" onsubmit="handleAuth(event)">
-                <input type="text" id="auth-username" placeholder="اسم المستخدم" required autocomplete="off">
-                <input type="password" id="auth-password" placeholder="كلمة المرور" required>
-                <button type="submit" class="btn-primary" id="auth-submit">دخول</button>
+            <div id="auth-alert" class="alert-box"></div>
+
+            <!-- نموذج تسجيل الدخول -->
+            <form id="form-login" onsubmit="doLogin(event)">
+                <input type="text" id="login-id" placeholder="اسم المستخدم أو البريد الإلكتروني" required
+                    autocomplete="off">
+                <input type="password" id="login-pass" placeholder="كلمة المرور" required>
+                <button type="submit" class="btn-main" id="btn-login">دخول</button>
             </form>
-            <a class="auth-toggle" id="auth-toggle" onclick="toggleAuthMode()">ليس لديك حساب؟ إنشاء حساب جديد</a>
+
+            <!-- نموذج إنشاء حساب جديد -->
+            <form id="form-register" style="display: none;" onsubmit="doRegister(event)">
+                <input type="text" id="reg-user" placeholder="اسم المستخدم" required autocomplete="off">
+                <input type="email" id="reg-email" placeholder="البريد الإلكتروني" required autocomplete="off">
+                <input type="password" id="reg-pass" placeholder="كلمة المرور" required>
+
+                <!-- حقل رمز التأكيد (يظهر بعد طلب الرمز) -->
+                <div id="otp-group" style="display: none;">
+                    <input type="text" id="reg-otp" placeholder="أدخل رمز التأكيد (OTP)" maxlength="6">
+                </div>
+
+                <button type="button" class="btn-main" id="btn-send-otp" onclick="requestOtp()">إرسال رمز
+                    التأكيد</button>
+                <button type="submit" class="btn-main" id="btn-complete-reg" style="display: none;">تأكيد وإنشاء
+                    الحساب</button>
+            </form>
+
+            <a class="auth-toggle" id="auth-switch" onclick="switchAuth()">ليس لديك حساب؟ إنشاء حساب جديد</a>
         </div>
     </div>
 
-    <!-- الواجهة الأساسية للتطبيق -->
+    <!-- الواجهة الأساسية لواتساب ويب -->
     <div class="app-container" id="app-container">
-        <!-- المحادثات الجانبية -->
+        <!-- قائمة المحادثات -->
         <div class="sidebar">
             <div class="sidebar-header">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <div class="user-avatar" id="my-avatar">U</div>
                     <span id="my-name" style="color: #e9edef; font-weight: 500;"></span>
                 </div>
-                <button class="btn-icon" onclick="logout()" title="تسجيل الخروج" style="font-size: 18px;">🚪</button>
+                <button class="icon-btn" onclick="logout()" title="تسجيل الخروج" style="font-size: 18px;">🚪</button>
             </div>
-            <div class="search-box">
-                <input type="text" class="search-input" id="search-input" placeholder="بحث أو بدء محادثة جديدة..."
-                    onkeyup="filterUsers()">
+            <div class="search-bar">
+                <input type="text" id="search-input" placeholder="بحث أو بدء محادثة جديدة..." onkeyup="filterUsers()">
             </div>
             <ul class="user-list" id="users-list"></ul>
         </div>
 
-        <!-- نافذة المحادثة -->
+        <!-- المحادثة النشطة -->
         <div class="chat-area" id="chat-area">
             <div class="chat-empty" id="chat-empty">
-                <div style="font-size: 60px; margin-bottom: 10px;">💻</div>
+                <div style="font-size: 64px; margin-bottom: 12px;">📱</div>
                 <h3>واتساب للويب</h3>
-                <p style="margin-top: 6px; font-size: 14px;">اختر أي مستخدم من القائمة للبدء في الدردشة الفورية</p>
+                <p style="margin-top: 6px; font-size: 14px;">اختر جهة اتصال لبدء المحادثة الفورية وتجربة الصوتيات
+                    والمرفقات</p>
             </div>
 
-            <div id="chat-active" style="display: none; height: 100%; flex-direction: column;">
+            <div id="chat-content" style="display: none; height: 100%; flex-direction: column;">
                 <div class="chat-header">
-                    <button class="btn-icon" onclick="closeChat()" style="margin-left: 8px; display: none;"
-                        id="back-btn">⬅</button>
+                    <button class="icon-btn" onclick="backToList()" id="back-btn"
+                        style="display: none; margin-left: 8px;">⬅</button>
                     <div class="user-avatar" id="active-avatar">?</div>
-                    <div class="title">
+                    <div class="info">
                         <div id="active-name" style="font-weight: 500;"></div>
                         <div id="active-status" style="font-size: 12px; color: #8696a0;"></div>
                     </div>
                 </div>
 
-                <div class="chat-messages" id="messages-container"></div>
+                <div class="chat-messages" id="messages-box"></div>
 
                 <div class="chat-footer">
-                    <input type="file" id="file-input" style="display: none;" onchange="uploadAndSendFile(event)">
-                    <button class="btn-icon" onclick="document.getElementById('file-input').click()"
+                    <input type="file" id="file-uploader" style="display: none;" onchange="handleFileUpload(event)">
+                    <button class="icon-btn" onclick="document.getElementById('file-uploader').click()"
                         title="إرفاق ملف أو صورة">📎</button>
-                    <input type="text" class="chat-input" id="message-input" placeholder="اكتب رسالة..."
-                        onkeypress="if(event.key==='Enter') sendTextMessage()">
-                    <button class="btn-icon" id="record-btn" onclick="toggleVoiceRecord()" title="تسجيل صوت">🎤</button>
-                    <button class="btn-icon" onclick="sendTextMessage()" style="color: #00a884;"
-                        title="إرسال">➤</button>
+                    <input type="text" class="text-input" id="message-text" placeholder="اكتب رسالة..."
+                        onkeypress="if(event.key==='Enter') sendText()">
+                    <button class="icon-btn" id="mic-btn" onclick="toggleVoice()" title="تسجيل صوتي">🎤</button>
+                    <button class="icon-btn" onclick="sendText()" style="color: #00a884;" title="إرسال">➤</button>
                 </div>
             </div>
         </div>
@@ -472,81 +497,163 @@
         let currentUser = localStorage.getItem('chat_user') || null;
         let activeChatUser = null;
         let isRegisterMode = false;
-        let onlineUsersList = [];
-        let allUsers = [];
+        let onlineUsers = [];
+        let contacts = [];
 
-        // إعدادات التسجيل الصوتي
+        // إعدادات الصوت
         let mediaRecorder = null;
         let audioChunks = [];
         let isRecording = false;
 
-        // تهيئة التطبيق عند الفتح
-        if (currentUser) {
-            initChat();
+        if (currentUser) openMainApp();
+
+        function setAlert(msg, isSuccess = false) {
+            const box = document.getElementById('auth-alert');
+            box.innerHTML = msg;
+            box.className = 'alert-box ' + (isSuccess ? 'alert-success' : 'alert-error');
         }
 
-        function toggleAuthMode() {
+        function switchAuth() {
             isRegisterMode = !isRegisterMode;
-            document.getElementById('auth-alert').className = 'alert-msg';
+            document.getElementById('auth-alert').className = 'alert-box';
             if (isRegisterMode) {
                 document.getElementById('auth-title').innerText = 'إنشاء حساب جديد';
-                document.getElementById('auth-submit').innerText = 'تسجيل حساب';
-                document.getElementById('auth-toggle').innerText = 'لديك حساب بالفعل؟ تسجيل الدخول';
+                document.getElementById('form-login').style.display = 'none';
+                document.getElementById('form-register').style.display = 'block';
+                document.getElementById('auth-switch').innerText = 'لديك حساب بالفعل؟ تسجيل الدخول';
+                resetRegisterForm();
             } else {
                 document.getElementById('auth-title').innerText = 'تسجيل الدخول';
-                document.getElementById('auth-submit').innerText = 'دخول';
-                document.getElementById('auth-toggle').innerText = 'ليس لديك حساب؟ إنشاء حساب جديد';
+                document.getElementById('form-login').style.display = 'block';
+                document.getElementById('form-register').style.display = 'none';
+                document.getElementById('auth-switch').innerText = 'ليس لديك حساب؟ إنشاء حساب جديد';
             }
         }
 
-        async function handleAuth(e) {
-            e.preventDefault();
-            const username = document.getElementById('auth-username').value.trim();
-            const password = document.getElementById('auth-password').value;
-            const alertBox = document.getElementById('auth-alert');
-            const submitBtn = document.getElementById('auth-submit');
-            const url = isRegisterMode ? '/register' : '/login';
+        function resetRegisterForm() {
+            document.getElementById('otp-group').style.display = 'none';
+            document.getElementById('btn-send-otp').style.display = 'block';
+            document.getElementById('btn-complete-reg').style.display = 'none';
+        }
 
-            submitBtn.disabled = true;
-            submitBtn.innerText = 'يرجى الانتظار...';
+        // 1. طلب رمز التأكيد (OTP)
+        async function requestOtp() {
+            const username = document.getElementById('reg-user').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const btn = document.getElementById('btn-send-otp');
+
+            if (!username || !email) {
+                setAlert('يرجى كتابة اسم المستخدم والبريد الإلكتروني أولاً');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = 'جاري إرسال الرمز...';
 
             try {
-                const res = await fetch(url, {
+                const res = await fetch('/send-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
+                    body: JSON.stringify({ username, email })
                 });
                 const data = await res.json();
 
                 if (res.ok && data.success) {
-                    if (isRegisterMode) {
-                        alertBox.innerText = data.message;
-                        alertBox.className = 'alert-msg alert-success';
-                        toggleAuthMode();
-                    } else {
-                        currentUser = data.username;
-                        localStorage.setItem('chat_user', currentUser);
-                        initChat();
-                    }
+                    setAlert(`تم توليد الرمز بنجاح!<br><b>رمز التأكيد الخاص بك هو: <span style="font-size:16px; color:#10b981;">${data.otp}</span></b>`, true);
+                    document.getElementById('otp-group').style.display = 'block';
+                    document.getElementById('btn-send-otp').style.display = 'none';
+                    document.getElementById('btn-complete-reg').style.display = 'block';
+                    document.getElementById('reg-otp').value = data.otp; // تعبئة تلقائية لراحتك
                 } else {
-                    alertBox.innerText = data.message || 'حدث خطأ غير متوقع';
-                    alertBox.className = 'alert-msg alert-error';
+                    setAlert(data.message || 'تعذر إرسال الرمز');
                 }
-            } catch (err) {
-                alertBox.innerText = 'تعذر الاتصال بالسيرفر، تحقق من الإنترنت';
-                alertBox.className = 'alert-msg alert-error';
+            } catch (e) {
+                setAlert('فشل الاتصال بالسيرفر، تأكد من الإنترنت');
             } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerText = isRegisterMode ? 'تسجيل حساب' : 'دخول';
+                btn.disabled = false;
+                btn.innerText = 'إرسال رمز التأكيد';
             }
         }
 
-        function initChat() {
+        // 2. إتمام إنشاء الحساب
+        async function doRegister(e) {
+            e.preventDefault();
+            const username = document.getElementById('reg-user').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const password = document.getElementById('reg-pass').value;
+            const otp = document.getElementById('reg-otp').value.trim();
+            const btn = document.getElementById('btn-complete-reg');
+
+            if (!otp) {
+                setAlert('يرجى إدخال رمز التأكيد (OTP)');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = 'جاري التحقق...';
+
+            try {
+                const res = await fetch('/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password, otp })
+                });
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    switchAuth();
+                    setAlert('تم إنشاء وتأكيد الحساب بنجاح! سجّل دخولك الآن', true);
+                    document.getElementById('login-id').value = username;
+                } else {
+                    setAlert(data.message || 'فشل التسجيل');
+                }
+            } catch (e) {
+                setAlert('تعذر إكمال التسجيل، تحقق من الاتصال');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'تأكيد وإنشاء الحساب';
+            }
+        }
+
+        // 3. تسجيل الدخول
+        async function doLogin(e) {
+            e.preventDefault();
+            const identifier = document.getElementById('login-id').value.trim();
+            const password = document.getElementById('login-pass').value;
+            const btn = document.getElementById('btn-login');
+
+            btn.disabled = true;
+            btn.innerText = 'جاري تسجيل الدخول...';
+
+            try {
+                const res = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ identifier, password })
+                });
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    currentUser = data.username;
+                    localStorage.setItem('chat_user', currentUser);
+                    openMainApp();
+                } else {
+                    setAlert(data.message || 'بيانات الدخول غير صحيحة');
+                }
+            } catch (e) {
+                setAlert('فشل الاتصال بالسيرفر، يرجى المحاولة لاحقاً');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'دخول';
+            }
+        }
+
+        function openMainApp() {
             document.getElementById('auth-overlay').style.display = 'none';
             document.getElementById('my-name').innerText = currentUser;
             document.getElementById('my-avatar').innerText = currentUser[0].toUpperCase();
             socket.emit('user_connected', currentUser);
-            loadUsers();
+            fetchContacts();
         }
 
         function logout() {
@@ -554,36 +661,34 @@
             location.reload();
         }
 
-        async function loadUsers() {
+        async function fetchContacts() {
             try {
                 const res = await fetch(`/users?current=${encodeURIComponent(currentUser)}`);
                 const data = await res.json();
                 if (data.success) {
-                    allUsers = data.users;
-                    renderUsersList();
+                    contacts = data.users;
+                    renderContacts();
                 }
-            } catch (e) {
-                console.error('خطأ في جلب المستخدمين:', e);
-            }
+            } catch (e) { }
         }
 
-        function renderUsersList() {
+        function renderContacts() {
             const list = document.getElementById('users-list');
-            const search = (document.getElementById('search-input').value || '').toLowerCase();
+            const q = (document.getElementById('search-input').value || '').toLowerCase();
             list.innerHTML = '';
 
-            allUsers
-                .filter(u => u.username.toLowerCase().includes(search))
+            contacts
+                .filter(u => u.username.toLowerCase().includes(q) || (u.email && u.email.toLowerCase().includes(q)))
                 .forEach(u => {
-                    const isOnline = onlineUsersList.includes(u.username.toLowerCase());
+                    const isOnline = onlineUsers.includes(u.username.toLowerCase());
                     const li = document.createElement('li');
                     li.className = 'user-item' + (activeChatUser === u.username ? ' active' : '');
-                    li.onclick = () => selectUser(u.username);
+                    li.onclick = () => startChatWith(u.username);
                     li.innerHTML = `
             <div class="user-avatar">${u.username[0].toUpperCase()}</div>
-            <div class="user-info">
-              <div class="user-name">${u.username}</div>
-              <div class="user-status">${isOnline ? '<span class="online-dot"></span> متصل الآن' : 'غير متصل'}</div>
+            <div class="user-details">
+              <div class="user-title">${u.username}</div>
+              <div class="user-sub">${isOnline ? '<span class="dot-green"></span> متصل الآن' : 'غير متصل'}</div>
             </div>
           `;
                     list.appendChild(li);
@@ -591,38 +696,37 @@
         }
 
         function filterUsers() {
-            renderUsersList();
+            renderContacts();
         }
 
-        function selectUser(username) {
-            activeChatUser = username;
-            renderUsersList();
+        function startChatWith(user) {
+            activeChatUser = user;
+            renderContacts();
             document.getElementById('chat-empty').style.display = 'none';
-            const activeArea = document.getElementById('chat-active');
-            activeArea.style.display = 'flex';
-            document.getElementById('active-name').innerText = username;
-            document.getElementById('active-avatar').innerText = username[0].toUpperCase();
-            const isOnline = onlineUsersList.includes(username.toLowerCase());
-            document.getElementById('active-status').innerText = isOnline ? 'متصل الآن' : 'آخر ظهور قريباً';
+            document.getElementById('chat-content').style.display = 'flex';
+            document.getElementById('active-name').innerText = user;
+            document.getElementById('active-avatar').innerText = user[0].toUpperCase();
+            const isOnline = onlineUsers.includes(user.toLowerCase());
+            document.getElementById('active-status').innerText = isOnline ? 'متصل الآن' : 'غير متصل';
 
-            document.getElementById('messages-container').innerHTML = '';
+            document.getElementById('messages-box').innerHTML = '';
             socket.emit('get_history', { sender: currentUser, receiver: activeChatUser });
 
             if (window.innerWidth <= 768) {
-                document.getElementById('app-container').classList.add('chat-active');
+                document.getElementById('app-container').classList.add('chat-open');
                 document.getElementById('back-btn').style.display = 'block';
             }
         }
 
-        function closeChat() {
-            document.getElementById('app-container').classList.remove('chat-active');
+        function backToList() {
+            document.getElementById('app-container').classList.remove('chat-open');
             document.getElementById('back-btn').style.display = 'none';
             activeChatUser = null;
-            renderUsersList();
+            renderContacts();
         }
 
-        function sendTextMessage() {
-            const input = document.getElementById('message-input');
+        function sendText() {
+            const input = document.getElementById('message-text');
             const text = input.value.trim();
             if (!text || !activeChatUser) return;
 
@@ -635,15 +739,15 @@
             input.value = '';
         }
 
-        async function uploadAndSendFile(e) {
+        async function handleFileUpload(e) {
             const file = e.target.files[0];
             if (!file || !activeChatUser) return;
 
-            const formData = new FormData();
-            formData.append('file', file);
+            const fd = new FormData();
+            fd.append('file', file);
 
             try {
-                const res = await fetch('/upload', { method: 'POST', body: formData });
+                const res = await fetch('/upload', { method: 'POST', body: fd });
                 const data = await res.json();
                 if (data.success) {
                     const type = file.type.startsWith('image/') ? 'image' : 'file';
@@ -651,32 +755,33 @@
                         sender: currentUser,
                         receiver: activeChatUser,
                         type,
-                        content: data.fileUrl
+                        content: data.fileUrl,
+                        fileName: data.fileName
                     });
                 }
-            } catch (err) {
-                alert('فشل رفع الملف، يرجى المحاولة مرة أخرى');
+            } catch (e) {
+                alert('فشل رفع الملف');
             }
             e.target.value = '';
         }
 
-        // تسجيل وإرسال الصوتيات
-        async function toggleVoiceRecord() {
-            const btn = document.getElementById('record-btn');
+        // تسجيل الصوت
+        async function toggleVoice() {
+            const btn = document.getElementById('mic-btn');
             if (!isRecording) {
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                     mediaRecorder = new MediaRecorder(stream);
                     audioChunks = [];
 
-                    mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+                    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
                     mediaRecorder.onstop = async () => {
-                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                        const formData = new FormData();
-                        formData.append('file', audioBlob, 'voice.webm');
+                        const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                        const fd = new FormData();
+                        fd.append('file', blob, 'voice.webm');
 
                         try {
-                            const res = await fetch('/upload', { method: 'POST', body: formData });
+                            const res = await fetch('/upload', { method: 'POST', body: fd });
                             const data = await res.json();
                             if (data.success && activeChatUser) {
                                 socket.emit('private_message', {
@@ -686,16 +791,14 @@
                                     content: data.fileUrl
                                 });
                             }
-                        } catch (err) {
-                            console.error(err);
-                        }
+                        } catch (err) { }
                     };
 
                     mediaRecorder.start();
                     isRecording = true;
                     btn.classList.add('recording');
                 } catch {
-                    alert('يرجى السماح بالوصول للميكروفون');
+                    alert('يرجى السماح بالوصول إلى الميكروفون لتسجيل الصوت');
                 }
             } else {
                 mediaRecorder.stop();
@@ -705,50 +808,50 @@
         }
 
         function appendMessage(msg) {
-            const container = document.getElementById('messages-container');
+            const box = document.getElementById('messages-box');
             const isMe = msg.sender.toLowerCase() === currentUser.toLowerCase();
             const div = document.createElement('div');
-            div.className = 'msg ' + (isMe ? 'me' : 'other');
+            div.className = 'bubble ' + (isMe ? 'me' : 'other');
 
-            let bodyHtml = '';
+            let body = '';
             if (msg.type === 'text') {
-                bodyHtml = `<div>${escapeHtml(msg.content)}</div>`;
+                body = `<div>${escapeHtml(msg.content)}</div>`;
             } else if (msg.type === 'image') {
-                bodyHtml = `<img src="${msg.content}" alt="صورة" onclick="window.open('${msg.content}')">`;
+                body = `<img src="${msg.content}" onclick="window.open('${msg.content}')" alt="صورة">`;
             } else if (msg.type === 'audio') {
-                bodyHtml = `<audio controls src="${msg.content}"></audio>`;
+                body = `<audio controls src="${msg.content}"></audio>`;
             } else {
-                bodyHtml = `<a href="${msg.content}" target="_blank" style="color: #53bdeb; text-decoration: underline;">📄 تحميل الملف المرفق</a>`;
+                body = `<a href="${msg.content}" target="_blank" style="color: #53bdeb; text-decoration: underline;">📄 ${escapeHtml(msg.file_name || 'ملف مرفق')}</a>`;
             }
 
-            div.innerHTML = `${bodyHtml}<div class="msg-time">${msg.timestamp || ''}</div>`;
-            container.appendChild(div);
-            container.scrollTop = container.scrollHeight;
+            div.innerHTML = `${body}<div class="bubble-time">${msg.timestamp || ''} ${isMe ? '✓✓' : ''}</div>`;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
         }
 
-        function escapeHtml(text) {
-            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        function escapeHtml(t) {
+            return (t || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         }
 
-        // استلام الأحداث من السوكيت
-        socket.on('online_users', (users) => {
-            onlineUsersList = users;
-            renderUsersList();
+        // اتصالات السوكيت المباشرة
+        socket.on('online_users', users => {
+            onlineUsers = users;
+            renderContacts();
             if (activeChatUser) {
-                const isOnline = onlineUsersList.includes(activeChatUser.toLowerCase());
+                const isOnline = onlineUsers.includes(activeChatUser.toLowerCase());
                 document.getElementById('active-status').innerText = isOnline ? 'متصل الآن' : 'غير متصل';
             }
         });
 
         socket.on('chat_history', ({ receiver, messages }) => {
             if (activeChatUser && receiver.toLowerCase() === activeChatUser.toLowerCase()) {
-                const container = document.getElementById('messages-container');
-                container.innerHTML = '';
+                const box = document.getElementById('messages-box');
+                box.innerHTML = '';
                 messages.forEach(appendMessage);
             }
         });
 
-        socket.on('message_received', (msg) => {
+        socket.on('message_received', msg => {
             if (
                 activeChatUser &&
                 (msg.sender.toLowerCase() === activeChatUser.toLowerCase() ||
