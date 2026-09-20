@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>واتساب ويب</title>
     <script src="/socket.io/socket.io.js"></script>
     <style>
@@ -14,13 +15,15 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
 
+        html,
         body {
-            background: #111b21;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            height: 100%;
+            height: 100dvh;
+            width: 100%;
             overflow: hidden;
+            background: #111b21;
+            position: fixed;
+            inset: 0;
         }
 
         /* شاشة الدخول والتسجيل */
@@ -32,6 +35,7 @@
             justify-content: center;
             align-items: center;
             z-index: 1000;
+            padding: 15px;
         }
 
         .auth-card {
@@ -39,7 +43,7 @@
             border: 1px solid #222e35;
             padding: 30px 24px;
             border-radius: 14px;
-            width: 92%;
+            width: 100%;
             max-width: 400px;
             text-align: center;
             color: #e9edef;
@@ -133,12 +137,16 @@
             display: block;
         }
 
-        /* الإطار الرئيسي لواتساب */
+        /* الإطار الرئيسي للتطبيق */
         .app-container {
             width: 100%;
-            height: 100vh;
+            height: 100%;
+            height: 100dvh;
             display: flex;
             background: #111b21;
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
         }
 
         .sidebar {
@@ -147,10 +155,13 @@
             display: flex;
             flex-direction: column;
             background: #111b21;
+            height: 100%;
         }
 
         .sidebar-header {
             height: 60px;
+            min-height: 60px;
+            flex-shrink: 0;
             background: #202c33;
             padding: 10px 16px;
             display: flex;
@@ -174,6 +185,7 @@
         .search-bar {
             padding: 8px 12px;
             background: #111b21;
+            flex-shrink: 0;
         }
 
         .search-bar input {
@@ -191,6 +203,7 @@
             flex: 1;
             overflow-y: auto;
             list-style: none;
+            -webkit-overflow-scrolling: touch;
         }
 
         .user-item {
@@ -234,13 +247,18 @@
             margin-left: 5px;
         }
 
-        /* منطقة الشات */
+        /* منطقة الشات والمحادثة */
         .chat-area {
             flex: 1;
+            height: 100%;
+            height: 100dvh;
             display: flex;
             flex-direction: column;
             background: #0b141a;
             position: relative;
+            min-width: 0;
+            min-height: 0;
+            overflow: hidden;
         }
 
         .chat-empty {
@@ -252,14 +270,26 @@
             color: #8696a0;
         }
 
+        #chat-content {
+            height: 100%;
+            width: 100%;
+            display: none;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+        }
+
         .chat-header {
             height: 60px;
+            min-height: 60px;
+            flex-shrink: 0;
             background: #202c33;
             padding: 10px 16px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             border-bottom: 1px solid #222e35;
+            z-index: 5;
         }
 
         .chat-header .meta {
@@ -275,9 +305,11 @@
         }
 
         .chat-messages {
-            flex: 1;
+            flex: 1 1 0;
+            min-height: 0;
             overflow-y: auto;
-            padding: 20px 5%;
+            -webkit-overflow-scrolling: touch;
+            padding: 15px 4%;
             display: flex;
             flex-direction: column;
             gap: 8px;
@@ -286,7 +318,7 @@
         }
 
         .bubble {
-            max-width: 65%;
+            max-width: 75%;
             padding: 8px 12px;
             border-radius: 8px;
             font-size: 14.5px;
@@ -321,23 +353,29 @@
         }
 
         .bubble audio {
-            width: 230px;
+            width: 220px;
             height: 36px;
             margin-top: 6px;
             outline: none;
         }
 
+        /* شريط الكتابة الثابت في الأسفل */
         .chat-footer {
+            flex-shrink: 0;
             background: #202c33;
-            padding: 8px 14px;
+            padding: 8px 10px;
+            padding-bottom: max(10px, env(safe-area-inset-bottom));
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
+            border-top: 1px solid #222e35;
+            z-index: 10;
         }
 
         .chat-footer input.text-input {
             flex: 1;
-            padding: 10px 16px;
+            min-width: 0;
+            padding: 10px 14px;
             background: #2a3942;
             border: none;
             border-radius: 8px;
@@ -355,10 +393,11 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 40px;
-            height: 40px;
+            width: 38px;
+            height: 38px;
             border-radius: 50%;
             transition: 0.2s;
+            flex-shrink: 0;
         }
 
         .icon-btn:hover {
@@ -386,7 +425,7 @@
             }
         }
 
-        /* شاشة المكالمات (WebRTC) */
+        /* شاشة المكالمات */
         .call-overlay {
             position: fixed;
             inset: 0;
@@ -396,14 +435,14 @@
             justify-content: space-between;
             align-items: center;
             z-index: 2000;
-            padding: 30px 20px;
+            padding: 25px 15px;
         }
 
         .call-videos {
             position: relative;
             width: 100%;
             max-width: 800px;
-            height: 68vh;
+            height: 65vh;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -420,10 +459,10 @@
 
         #local-video {
             position: absolute;
-            bottom: 20px;
-            right: 20px;
-            width: 160px;
-            height: 120px;
+            bottom: 15px;
+            right: 15px;
+            width: 130px;
+            height: 95px;
             object-fit: cover;
             border-radius: 8px;
             border: 2px solid #00a884;
@@ -437,17 +476,16 @@
         }
 
         .btn-call {
-            width: 55px;
-            height: 55px;
+            width: 52px;
+            height: 52px;
             border-radius: 50%;
             border: none;
             color: white;
-            font-size: 22px;
+            font-size: 20px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: 0.2s;
         }
 
         .btn-hangup {
@@ -458,24 +496,27 @@
             background: #10b981;
         }
 
-        /* تنبيه رنين المكالمة */
         .incoming-dialog {
             position: fixed;
-            top: 25px;
+            top: 20px;
             left: 50%;
             transform: translateX(-50%);
             background: #202c33;
             border: 1px solid #00a884;
-            padding: 15px 25px;
+            padding: 12px 20px;
             border-radius: 30px;
             display: none;
             align-items: center;
-            gap: 20px;
+            gap: 15px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
             z-index: 3000;
             color: #e9edef;
+            width: 90%;
+            max-width: 350px;
+            justify-content: space-between;
         }
 
+        /* التوافق الكامل مع شاشات الهواتف */
         @media (max-width: 768px) {
             .sidebar {
                 width: 100%;
@@ -494,9 +535,8 @@
                 display: flex;
             }
 
-            #local-video {
-                width: 110px;
-                height: 85px;
+            #back-btn {
+                display: flex !important;
             }
         }
     </style>
@@ -504,26 +544,26 @@
 
 <body>
 
-    <!-- نافذة رنين المكالمة -->
+    <!-- تنبيه رنين المكالمة الواردة -->
     <div class="incoming-dialog" id="incoming-dialog">
-        <div style="font-size: 26px;" id="incoming-icon">📞</div>
+        <div style="font-size: 24px;" id="incoming-icon">📞</div>
         <div>
-            <div id="incoming-caller" style="font-weight: bold; font-size: 15px;"></div>
-            <div style="font-size: 12px; color: #8696a0;" id="incoming-type">مكالمة واردة...</div>
+            <div id="incoming-caller" style="font-weight: bold; font-size: 14px;"></div>
+            <div style="font-size: 11px; color: #8696a0;" id="incoming-type">مكالمة واردة...</div>
         </div>
-        <div style="display: flex; gap: 10px;">
+        <div style="display: flex; gap: 8px;">
             <button class="btn-call btn-accept" onclick="acceptCall()"
-                style="width: 42px; height: 42px; font-size: 18px;">✔</button>
+                style="width: 38px; height: 38px; font-size: 16px;">✔</button>
             <button class="btn-call btn-hangup" onclick="rejectCall()"
-                style="width: 42px; height: 42px; font-size: 18px;">✖</button>
+                style="width: 38px; height: 38px; font-size: 16px;">✖</button>
         </div>
     </div>
 
-    <!-- شاشة المكالمة الجارية -->
+    <!-- واجهة المكالمة الجارية -->
     <div class="call-overlay" id="call-overlay">
         <div style="text-align: center; color: white;">
-            <h3 id="call-target-name" style="font-size: 20px;"></h3>
-            <p id="call-status-text" style="font-size: 14px; color: #00a884; margin-top: 4px;">جاري الاتصال...</p>
+            <h3 id="call-target-name" style="font-size: 18px;"></h3>
+            <p id="call-status-text" style="font-size: 13px; color: #00a884; margin-top: 3px;">جاري الاتصال...</p>
         </div>
         <div class="call-videos">
             <video id="remote-video" autoplay playsinline></video>
@@ -545,7 +585,6 @@
             <h2 id="auth-title">تسجيل الدخول</h2>
             <div id="auth-alert" class="alert-box"></div>
 
-            <!-- تسجيل الدخول -->
             <form id="form-login" onsubmit="doLogin(event)">
                 <input type="text" id="login-id" placeholder="اسم المستخدم أو البريد الإلكتروني" required
                     autocomplete="off">
@@ -553,7 +592,6 @@
                 <button type="submit" class="btn-main" id="btn-login">دخول</button>
             </form>
 
-            <!-- إنشاء الحساب -->
             <form id="form-register" style="display: none;" onsubmit="doRegister(event)">
                 <input type="text" id="reg-user" placeholder="اسم المستخدم" required autocomplete="off">
                 <input type="email" id="reg-email" placeholder="البريد الإلكتروني" required autocomplete="off">
@@ -573,7 +611,7 @@
         </div>
     </div>
 
-    <!-- واجهة واتساب ويب الأساسية -->
+    <!-- تطبيق واتساب ويب -->
     <div class="app-container" id="app-container">
         <div class="sidebar">
             <div class="sidebar-header">
@@ -593,11 +631,10 @@
             <div class="chat-empty" id="chat-empty">
                 <div style="font-size: 64px; margin-bottom: 12px;">📱</div>
                 <h3>واتساب للويب</h3>
-                <p style="margin-top: 6px; font-size: 14px;">اختر مستخدماً من القائمة لبدء المحادثة، المكالمات الصوتية،
-                    ومكالمات الفيديو</p>
+                <p style="margin-top: 6px; font-size: 14px;">اختر مستخدماً من القائمة لبدء المحادثة</p>
             </div>
 
-            <div id="chat-content" style="display: none; height: 100%; flex-direction: column;">
+            <div id="chat-content">
                 <div class="chat-header">
                     <div class="meta">
                         <button class="icon-btn" onclick="backToList()" id="back-btn" style="display: none;">⬅</button>
@@ -607,7 +644,6 @@
                             <div id="active-status" style="font-size: 12px; color: #8696a0;"></div>
                         </div>
                     </div>
-                    <!-- أزرار الاتصال الصوتي ومكالمة الفيديو -->
                     <div class="call-btns">
                         <button class="icon-btn" onclick="startCall(false)" title="اتصال صوتي">📞</button>
                         <button class="icon-btn" onclick="startCall(true)" title="مكالمة فيديو">📹</button>
@@ -619,7 +655,7 @@
                 <div class="chat-footer">
                     <input type="file" id="file-uploader" style="display: none;" onchange="handleFileUpload(event)">
                     <button class="icon-btn" onclick="document.getElementById('file-uploader').click()"
-                        title="إرفاق ملف أو صورة">📎</button>
+                        title="إرفاق ملف">📎</button>
                     <input type="text" class="text-input" id="message-text" placeholder="اكتب رسالة..."
                         onkeypress="if(event.key==='Enter') sendText()">
                     <button class="icon-btn" id="mic-btn" onclick="toggleVoice()" title="تسجيل صوت">🎤</button>
@@ -646,7 +682,6 @@
 
         const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 
-        // تسجيل الصوت
         let mediaRecorder = null;
         let audioChunks = [];
         let isRecording = false;
@@ -678,7 +713,6 @@
             }
         }
 
-        // 1. طلب رمز التأكيد (يعبئه فوراً حتى مع حظر المنفذ)
         async function requestOtp() {
             const username = document.getElementById('reg-user').value.trim();
             const email = document.getElementById('reg-email').value.trim();
@@ -706,7 +740,7 @@
                     document.getElementById('btn-send-otp').style.display = 'none';
                     document.getElementById('btn-complete-reg').style.display = 'block';
                     if (data.otp) {
-                        document.getElementById('reg-otp').value = data.otp; // تعبئة تلقائية
+                        document.getElementById('reg-otp').value = data.otp;
                     }
                 } else {
                     setAlert(data.message || 'تعذر الحصول على الرمز');
@@ -719,7 +753,6 @@
             }
         }
 
-        // 2. إنشاء الحساب
         async function doRegister(e) {
             e.preventDefault();
             const username = document.getElementById('reg-user').value.trim();
@@ -746,7 +779,7 @@
 
                 if (res.ok && data.success) {
                     switchAuth();
-                    setAlert('تم إنشاء الحساب وتفعيله بنجاح! سجّل دخولك الآن', true);
+                    setAlert('تم إنشاء الحساب بنجاح! سجّل دخولك الآن', true);
                     document.getElementById('login-id').value = username;
                 } else {
                     setAlert(data.message || 'فشل التسجيل');
@@ -759,7 +792,6 @@
             }
         }
 
-        // 3. الدخول
         async function doLogin(e) {
             e.preventDefault();
             const identifier = document.getElementById('login-id').value.trim();
@@ -847,7 +879,10 @@
             activeChatUser = user;
             renderContacts();
             document.getElementById('chat-empty').style.display = 'none';
-            document.getElementById('chat-content').style.display = 'flex';
+
+            const chatContent = document.getElementById('chat-content');
+            chatContent.style.display = 'flex';
+
             document.getElementById('active-name').innerText = user;
             document.getElementById('active-avatar').innerText = user[0].toUpperCase();
             const isOnline = onlineUsers.includes(user.toLowerCase());
@@ -856,15 +891,12 @@
             document.getElementById('messages-box').innerHTML = '';
             socket.emit('get_history', { sender: currentUser, receiver: activeChatUser });
 
-            if (window.innerWidth <= 768) {
-                document.getElementById('app-container').classList.add('chat-open');
-                document.getElementById('back-btn').style.display = 'block';
-            }
+            // تفعيل وضع المحادثة على الهاتف
+            document.getElementById('app-container').classList.add('chat-open');
         }
 
         function backToList() {
             document.getElementById('app-container').classList.remove('chat-open');
-            document.getElementById('back-btn').style.display = 'none';
             activeChatUser = null;
             renderContacts();
         }
@@ -982,6 +1014,10 @@
 
         async function initMedia(video) {
             isVideoCallActive = video;
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
             localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: video });
             document.getElementById('local-video').srcObject = localStream;
             document.getElementById('local-video').style.display = video ? 'block' : 'none';
