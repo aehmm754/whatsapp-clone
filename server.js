@@ -5,7 +5,13 @@ const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 const nodemailer = require('nodemailer');
+const dns = require('dns');
 const db = require('./database');
+
+// إجبار السيرفر على استخدام بروتوكول IPv4 لتفادي خطأ ENETUNREACH في Render
+if (dns.setDefaultResultOrder) {
+    dns.setDefaultResultOrder('ipv4first');
+}
 
 const app = express();
 const server = http.createServer(app);
@@ -17,7 +23,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// مجلد المرفقات والصوتيات
+// إنشاء مجلد رفع المرفقات
 const uploadDir = path.join(__dirname, 'public', 'uploads');
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
@@ -32,22 +38,22 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// إعداد خادم إرسال البريد الإلكتروني عبر Gmail
+// إعداد خادم إرسال البريد الإلكتروني عبر Gmail مع إلزام الاتصال بـ IPv4
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
     host: 'smtp.gmail.com',
     port: 465,
     secure: true,
     auth: {
         user: process.env.EMAIL_USER || '',
         pass: process.env.EMAIL_PASS || ''
-    }
+    },
+    family: 4 // منع الاتصال عبر IPv6 غير المدعوم
 });
 
-// ذاكرة حفظ رموز التأكيد المؤقتة
+// مخزن مؤقت لرموز التأكيد
 const otpStore = new Map();
 
-// 1. مسار إرسال كود OTP الحقيقي إلى الإيميل
+// 1. مسار إرسال كود OTP إلى البريد الإلكتروني
 app.post('/api/send-otp', async (req, res) => {
     const { email, username } = req.body;
     if (!email || !username) {
@@ -64,13 +70,11 @@ app.post('/api/send-otp', async (req, res) => {
             return res.status(400).json({ success: false, message: msg });
         }
 
-        // توليد رمز تأكيد مكون من 6 أرقام
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         otpStore.set(cleanEmail, { otp, expires: Date.now() + 10 * 60 * 1000 });
 
         console.log(`[OTP] رمز التحقق للمستخدم (${cleanUsername}) على البريد (${cleanEmail}) هو: ${otp}`);
 
-        // إرسال الرسالة إلى البريد
         if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
             try {
                 await transporter.sendMail({
@@ -85,7 +89,7 @@ app.post('/api/send-otp', async (req, res) => {
                 <div style="font-size: 32px; font-weight: bold; letter-spacing: 6px; color: #00a884; margin: 25px 0; background: #e8f5e9; padding: 14px; border-radius: 8px;">
                   ${otp}
                 </div>
-                <p style="color: #8696a0; font-size: 12.5px;">الرمز صالح لمدة 10 دقائق. يُرجى عدم مشاركته مع أي طرف آخر.</p>
+                <p style="color: #8696a0; font-size: 12.5px;">الرمز صالح لمدة 10 دقائق فقط. لا تشاركه مع أي طرف آخر.</p>
               </div>
             </div>
           `
@@ -95,13 +99,13 @@ app.post('/api/send-otp', async (req, res) => {
                 console.error('فشل إرسال البريد عبر Gmail:', mailErr.message);
                 return res.status(500).json({
                     success: false,
-                    message: 'فشل إرسال البريد. تأكد من تفعيل كلمة مرور التطبيقات في Gmail وصحة EMAIL_USER و EMAIL_PASS في Render.'
+                    message: 'فشل إرسال البريد. تحقق من صحة بيانات EMAIL_USER و EMAIL_PASS في Render.'
                 });
             }
         } else {
             return res.status(500).json({
                 success: false,
-                message: 'بيانات البريد غير معرّفة في سيرفر Render (EMAIL_USER و EMAIL_PASS). يرجى إضافتها في تبويب Environment.'
+                message: 'بيانات البريد غير معرّفة في تبويب Environment في Render.'
             });
         }
     });
@@ -144,7 +148,7 @@ app.post('/api/login', (req, res) => {
     });
 });
 
-// 4. جلب المستخدمين
+// 4. جلب جهات الاتصال
 app.get('/api/users', (req, res) => {
     const current = (req.query.current || '').toLowerCase();
     db.all('SELECT username, email FROM users WHERE LOWER(username) != ? ORDER BY username ASC', [current], (err, rows) => {
@@ -163,7 +167,7 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
     });
 });
 
-// 6. إدارة اتصالات Socket.io والدردشة ومكالمات الصوت والفيديو (WebRTC)
+// 6. إدارة اتصالات Socket.io ومكالمات الصوت والفيديو المباشرة (WebRTC Signaling)
 const onlineUsers = new Map();
 
 io.on('connection', (socket) => {
@@ -216,7 +220,7 @@ io.on('connection', (socket) => {
         );
     });
 
-    // إشارات الاتصال الصوتي ومكالمات الفيديو (WebRTC Signaling)
+    // مكالمات الصوت والفيديو (WebRTC)
     socket.on('call_user', ({ to, offer, isVideo, from }) => {
         const targetSocket = onlineUsers.get(to.toLowerCase());
         if (targetSocket) {
