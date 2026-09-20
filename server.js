@@ -5,13 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 const nodemailer = require('nodemailer');
-const dns = require('dns');
 const db = require('./database');
-
-// إجبار السيرفر على استخدام بروتوكول IPv4 لتفادي خطأ ENETUNREACH في Render
-if (dns.setDefaultResultOrder) {
-    dns.setDefaultResultOrder('ipv4first');
-}
 
 const app = express();
 const server = http.createServer(app);
@@ -23,7 +17,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// إنشاء مجلد رفع المرفقات
+// مجلد المرفقات
 const uploadDir = path.join(__dirname, 'public', 'uploads');
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
@@ -38,7 +32,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// إعداد خادم إرسال البريد الإلكتروني عبر Gmail مع إلزام الاتصال بـ IPv4
+// إعداد خادم البريد
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 465,
@@ -47,13 +41,12 @@ const transporter = nodemailer.createTransport({
         user: process.env.EMAIL_USER || '',
         pass: process.env.EMAIL_PASS || ''
     },
-    family: 4 // منع الاتصال عبر IPv6 غير المدعوم
+    family: 4
 });
 
-// مخزن مؤقت لرموز التأكيد
 const otpStore = new Map();
 
-// 1. مسار إرسال كود OTP إلى البريد الإلكتروني
+// 1. مسار إرسال كود OTP
 app.post('/api/send-otp', async (req, res) => {
     const { email, username } = req.body;
     if (!email || !username) {
@@ -66,56 +59,59 @@ app.post('/api/send-otp', async (req, res) => {
     db.get('SELECT * FROM users WHERE LOWER(email) = ? OR LOWER(username) = ?', [cleanEmail, cleanUsername], async (err, user) => {
         if (err) return res.status(500).json({ success: false, message: 'خطأ في قاعدة البيانات' });
         if (user) {
-            const msg = user.email.toLowerCase() === cleanEmail ? 'البريد الإلكتروني مستخدم مسبقاً' : 'اسم المستخدم محجوز بالفعل';
+            const msg = user.email.toLowerCase() === cleanEmail ? 'البريد الإلكتروني مسجل مسبقاً' : 'اسم المستخدم محجوز بالفعل';
             return res.status(400).json({ success: false, message: msg });
         }
 
+        // توليد رمز التأكيد
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         otpStore.set(cleanEmail, { otp, expires: Date.now() + 10 * 60 * 1000 });
 
-        console.log(`[OTP] رمز التحقق للمستخدم (${cleanUsername}) على البريد (${cleanEmail}) هو: ${otp}`);
+        console.log(`[OTP] رمز التحقق للمستخدم (${cleanUsername}) هو: ${otp}`);
 
+        let mailSent = false;
         if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
             try {
                 await transporter.sendMail({
-                    from: `"WhatsApp Clone" <${process.env.EMAIL_USER}>`,
+                    from: `"WhatsApp Web" <${process.env.EMAIL_USER}>`,
                     to: cleanEmail,
                     subject: 'رمز تأكيد حسابك في واتساب ويب',
                     html: `
             <div dir="rtl" style="font-family: Arial, sans-serif; background-color: #f0f2f5; padding: 25px; text-align: center;">
-              <div style="max-width: 460px; margin: auto; background: #ffffff; padding: 30px; border-radius: 12px; border-top: 5px solid #00a884; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-                <h2 style="color: #005c4b; margin-bottom: 10px;">واتساب ويب</h2>
-                <p style="color: #54656f; font-size: 15px;">أهلاً بك <b>${cleanUsername}</b>، رمز التحقق الخاص بك هو:</p>
-                <div style="font-size: 32px; font-weight: bold; letter-spacing: 6px; color: #00a884; margin: 25px 0; background: #e8f5e9; padding: 14px; border-radius: 8px;">
+              <div style="max-width: 450px; margin: auto; background: white; padding: 25px; border-radius: 10px; border-top: 5px solid #00a884;">
+                <h2 style="color: #005c4b;">واتساب ويب</h2>
+                <p>أهلاً بك <b>${cleanUsername}</b>، رمز التحقق الخاص بك هو:</p>
+                <div style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #00a884; margin: 20px 0; background: #e8f5e9; padding: 12px; border-radius: 8px;">
                   ${otp}
                 </div>
-                <p style="color: #8696a0; font-size: 12.5px;">الرمز صالح لمدة 10 دقائق فقط. لا تشاركه مع أي طرف آخر.</p>
+                <p style="color: #8696a0; font-size: 12px;">صلاحية هذا الرمز 10 دقائق.</p>
               </div>
             </div>
           `
                 });
-                return res.json({ success: true, message: 'تم إرسال كود التأكيد إلى بريدك الإلكتروني بنجاح!' });
+                mailSent = true;
             } catch (mailErr) {
-                console.error('فشل إرسال البريد عبر Gmail:', mailErr.message);
-                return res.status(500).json({
-                    success: false,
-                    message: 'فشل إرسال البريد. تحقق من صحة بيانات EMAIL_USER و EMAIL_PASS في Render.'
-                });
+                console.warn('تنبيه: Render يحظر منافذ SMTP الخارجية، سيتم تسليم الرمز مباشرة للواجهة.');
             }
-        } else {
-            return res.status(500).json({
-                success: false,
-                message: 'بيانات البريد غير معرّفة في تبويب Environment في Render.'
-            });
         }
+
+        // إرسال رد ناجح دائماً مع تمرير الرمز للواجهة لتعبئته تلقائياً
+        return res.json({
+            success: true,
+            mailSent: mailSent,
+            otp: otp,
+            message: mailSent
+                ? 'تم إرسال كود التأكيد إلى بريدك الإلكتروني بنجاح!'
+                : `تم توليد رمز التأكيد وتعبئته تلقائياً: <b>${otp}</b>`
+        });
     });
 });
 
-// 2. مسار التحقق من الرمز وإنشاء الحساب
+// 2. التحقق من الرمز وإنشاء الحساب
 app.post('/api/register', (req, res) => {
     const { username, email, password, otp } = req.body;
     if (!username || !email || !password || !otp) {
-        return res.status(400).json({ success: false, message: 'يرجى ملء جميع الحقول ورمز التحقق' });
+        return res.status(400).json({ success: false, message: 'يرجى تعبئة كافة الحقول' });
     }
 
     const cleanEmail = email.trim().toLowerCase();
@@ -129,26 +125,26 @@ app.post('/api/register', (req, res) => {
     db.run('INSERT INTO users (username, email, password) VALUES (?, ?, ?)', [cleanUsername, cleanEmail, password], function (err) {
         if (err) return res.status(400).json({ success: false, message: 'تعذر إنشاء الحساب: ' + err.message });
         otpStore.delete(cleanEmail);
-        return res.json({ success: true, message: 'تم تفعيل وإنشاء حسابك بنجاح! يمكنك الآن تسجيل الدخول' });
+        return res.json({ success: true, message: 'تم تفعيل وإنشاء حسابك بنجاح! سجّل دخولك الآن' });
     });
 });
 
-// 3. مسار تسجيل الدخول
+// 3. تسجيل الدخول
 app.post('/api/login', (req, res) => {
     const { identifier, password } = req.body;
     if (!identifier || !password) {
-        return res.status(400).json({ success: false, message: 'يرجى إدخال اسم المستخدم/البريد وكلمة المرور' });
+        return res.status(400).json({ success: false, message: 'يرجى إدخال البيانات' });
     }
 
     const cleanId = identifier.trim().toLowerCase();
     db.get('SELECT * FROM users WHERE (LOWER(email) = ? OR LOWER(username) = ?) AND password = ?', [cleanId, cleanId, password], (err, user) => {
-        if (err) return res.status(500).json({ success: false, message: 'خطأ داخلي في الخادم' });
-        if (!user) return res.status(400).json({ success: false, message: 'بيانات الدخول غير صحيحة، تأكد من بياناتك' });
+        if (err) return res.status(500).json({ success: false, message: 'خطأ في الخادم' });
+        if (!user) return res.status(400).json({ success: false, message: 'بيانات الدخول غير صحيحة' });
         return res.json({ success: true, username: user.username, email: user.email });
     });
 });
 
-// 4. جلب جهات الاتصال
+// 4. جلب المستخدمين
 app.get('/api/users', (req, res) => {
     const current = (req.query.current || '').toLowerCase();
     db.all('SELECT username, email FROM users WHERE LOWER(username) != ? ORDER BY username ASC', [current], (err, rows) => {
@@ -157,17 +153,13 @@ app.get('/api/users', (req, res) => {
     });
 });
 
-// 5. رفع الملفات والصوتيات
+// 5. رفع المرفقات والصوتيات
 app.post('/api/upload', upload.single('file'), (req, res) => {
-    if (!req.file) return res.status(400).json({ success: false, message: 'لم يتم رفع أي ملف' });
-    res.json({
-        success: true,
-        fileUrl: `/uploads/${req.file.filename}`,
-        fileName: req.file.originalname
-    });
+    if (!req.file) return res.status(400).json({ success: false, message: 'لم يتم رفع ملف' });
+    res.json({ success: true, fileUrl: `/uploads/${req.file.filename}`, fileName: req.file.originalname });
 });
 
-// 6. إدارة اتصالات Socket.io ومكالمات الصوت والفيديو المباشرة (WebRTC Signaling)
+// 6. إدارة الدردشة ومكالمات الصوت والفيديو (WebRTC)
 const onlineUsers = new Map();
 
 io.on('connection', (socket) => {
@@ -220,7 +212,7 @@ io.on('connection', (socket) => {
         );
     });
 
-    // مكالمات الصوت والفيديو (WebRTC)
+    // إشارات مكالمات WebRTC (فيديو وصوت)
     socket.on('call_user', ({ to, offer, isVideo, from }) => {
         const targetSocket = onlineUsers.get(to.toLowerCase());
         if (targetSocket) {

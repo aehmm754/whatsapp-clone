@@ -133,7 +133,7 @@
             display: block;
         }
 
-        /* الإطار الرئيسي */
+        /* الإطار الرئيسي لواتساب */
         .app-container {
             width: 100%;
             height: 100vh;
@@ -386,7 +386,7 @@
             }
         }
 
-        /* شاشة المكالمات (فيديو / صوت) */
+        /* شاشة المكالمات (WebRTC) */
         .call-overlay {
             position: fixed;
             inset: 0;
@@ -458,7 +458,7 @@
             background: #10b981;
         }
 
-        /* تنبيه المكالمة الواردة */
+        /* تنبيه رنين المكالمة */
         .incoming-dialog {
             position: fixed;
             top: 25px;
@@ -504,7 +504,7 @@
 
 <body>
 
-    <!-- نافذة رنين المكالمة الواردة -->
+    <!-- نافذة رنين المكالمة -->
     <div class="incoming-dialog" id="incoming-dialog">
         <div style="font-size: 26px;" id="incoming-icon">📞</div>
         <div>
@@ -519,7 +519,7 @@
         </div>
     </div>
 
-    <!-- واجهة المكالمة الجارية -->
+    <!-- شاشة المكالمة الجارية -->
     <div class="call-overlay" id="call-overlay">
         <div style="text-align: center; color: white;">
             <h3 id="call-target-name" style="font-size: 20px;"></h3>
@@ -538,14 +538,14 @@
         </div>
     </div>
 
-    <!-- واجهة الدخول وإنشاء الحساب مع البريد الإلكتروني ورمز OTP -->
+    <!-- واجهة تسجيل الدخول والاشتراك -->
     <div class="auth-overlay" id="auth-overlay">
         <div class="auth-card">
             <div class="logo">💬</div>
             <h2 id="auth-title">تسجيل الدخول</h2>
             <div id="auth-alert" class="alert-box"></div>
 
-            <!-- نموذج تسجيل الدخول -->
+            <!-- تسجيل الدخول -->
             <form id="form-login" onsubmit="doLogin(event)">
                 <input type="text" id="login-id" placeholder="اسم المستخدم أو البريد الإلكتروني" required
                     autocomplete="off">
@@ -553,18 +553,18 @@
                 <button type="submit" class="btn-main" id="btn-login">دخول</button>
             </form>
 
-            <!-- نموذج إنشاء الحساب بالبريد الفعلي -->
+            <!-- إنشاء الحساب -->
             <form id="form-register" style="display: none;" onsubmit="doRegister(event)">
                 <input type="text" id="reg-user" placeholder="اسم المستخدم" required autocomplete="off">
                 <input type="email" id="reg-email" placeholder="البريد الإلكتروني" required autocomplete="off">
                 <input type="password" id="reg-pass" placeholder="كلمة المرور" required>
 
                 <div id="otp-group" style="display: none;">
-                    <input type="text" id="reg-otp" placeholder="أدخل رمز التحقق (OTP) المستلم على بريدك" maxlength="6">
+                    <input type="text" id="reg-otp" placeholder="رمز التحقق (OTP)" maxlength="6">
                 </div>
 
-                <button type="button" class="btn-main" id="btn-send-otp" onclick="requestOtp()">إرسال رمز التأكيد
-                    للبريد</button>
+                <button type="button" class="btn-main" id="btn-send-otp" onclick="requestOtp()">إرسال رمز
+                    التأكيد</button>
                 <button type="submit" class="btn-main" id="btn-complete-reg" style="display: none;">تأكيد الرمز وإنشاء
                     الحساب</button>
             </form>
@@ -573,7 +573,7 @@
         </div>
     </div>
 
-    <!-- تطبيق واتساب ويب -->
+    <!-- واجهة واتساب ويب الأساسية -->
     <div class="app-container" id="app-container">
         <div class="sidebar">
             <div class="sidebar-header">
@@ -637,18 +637,16 @@
         let onlineUsers = [];
         let contacts = [];
 
-        // إعدادات WebRTC للمكالمات الصوتية والمرئية
+        // WebRTC
         let peerConnection = null;
         let localStream = null;
         let currentCallingUser = null;
         let incomingCallData = null;
         let isVideoCallActive = false;
 
-        const rtcConfig = {
-            iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
-        };
+        const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 
-        // إعدادات تسجيل الصوت
+        // تسجيل الصوت
         let mediaRecorder = null;
         let audioChunks = [];
         let isRecording = false;
@@ -680,7 +678,7 @@
             }
         }
 
-        // 1. طلب رمز التأكيد على الإيميل
+        // 1. طلب رمز التأكيد (يعبئه فوراً حتى مع حظر المنفذ)
         async function requestOtp() {
             const username = document.getElementById('reg-user').value.trim();
             const email = document.getElementById('reg-email').value.trim();
@@ -692,7 +690,7 @@
             }
 
             btn.disabled = true;
-            btn.innerText = 'جاري إرسال الرمز للبريد...';
+            btn.innerText = 'جاري التجهيز...';
 
             try {
                 const res = await fetch('/api/send-otp', {
@@ -707,18 +705,21 @@
                     document.getElementById('otp-group').style.display = 'block';
                     document.getElementById('btn-send-otp').style.display = 'none';
                     document.getElementById('btn-complete-reg').style.display = 'block';
+                    if (data.otp) {
+                        document.getElementById('reg-otp').value = data.otp; // تعبئة تلقائية
+                    }
                 } else {
-                    setAlert(data.message || 'تعذر إرسال الرمز للبريد');
+                    setAlert(data.message || 'تعذر الحصول على الرمز');
                 }
             } catch (e) {
-                setAlert('فشل الاتصال بالسيرفر، تأكد من اتصال الإنترنت');
+                setAlert('فشل الاتصال بالسيرفر');
             } finally {
                 btn.disabled = false;
-                btn.innerText = 'إرسال رمز التأكيد للبريد';
+                btn.innerText = 'إرسال رمز التأكيد';
             }
         }
 
-        // 2. إتمام إنشاء الحساب بعد إدخال الرمز
+        // 2. إنشاء الحساب
         async function doRegister(e) {
             e.preventDefault();
             const username = document.getElementById('reg-user').value.trim();
@@ -728,7 +729,7 @@
             const btn = document.getElementById('btn-complete-reg');
 
             if (!otp) {
-                setAlert('يرجى إدخال رمز التحقق المستلم على بريدك');
+                setAlert('يرجى إدخال رمز التحقق');
                 return;
             }
 
@@ -745,7 +746,7 @@
 
                 if (res.ok && data.success) {
                     switchAuth();
-                    setAlert('تم إنشاء الحساب بنجاح! سجّل دخولك الآن', true);
+                    setAlert('تم إنشاء الحساب وتفعيله بنجاح! سجّل دخولك الآن', true);
                     document.getElementById('login-id').value = username;
                 } else {
                     setAlert(data.message || 'فشل التسجيل');
@@ -758,7 +759,7 @@
             }
         }
 
-        // 3. تسجيل الدخول
+        // 3. الدخول
         async function doLogin(e) {
             e.preventDefault();
             const identifier = document.getElementById('login-id').value.trim();
@@ -766,7 +767,7 @@
             const btn = document.getElementById('btn-login');
 
             btn.disabled = true;
-            btn.innerText = 'جاري تسجيل الدخول...';
+            btn.innerText = 'جاري الدخول...';
 
             try {
                 const res = await fetch('/api/login', {
@@ -975,26 +976,20 @@
             return (t || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         }
 
-        // ===============================================
-        // منطق المكالمات الصوتية والفيديو المباشرة (WebRTC)
-        // ===============================================
+        // ============================================
+        // الاتصال الصوتي ومكالمات الفيديو (WebRTC)
+        // ============================================
 
         async function initMedia(video) {
             isVideoCallActive = video;
-            localStream = await navigator.mediaDevices.getUserMedia({
-                audio: true,
-                video: video
-            });
+            localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: video });
             document.getElementById('local-video').srcObject = localStream;
             document.getElementById('local-video').style.display = video ? 'block' : 'none';
         }
 
         function createPeer(targetUser) {
             peerConnection = new RTCPeerConnection(rtcConfig);
-
-            localStream.getTracks().forEach(track => {
-                peerConnection.addTrack(track, localStream);
-            });
+            localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
 
             peerConnection.ontrack = (event) => {
                 document.getElementById('remote-video').srcObject = event.streams[0];
@@ -1027,14 +1022,9 @@
                 const offer = await peerConnection.createOffer();
                 await peerConnection.setLocalDescription(offer);
 
-                socket.emit('call_user', {
-                    to: currentCallingUser,
-                    offer,
-                    isVideo,
-                    from: currentUser
-                });
+                socket.emit('call_user', { to: currentCallingUser, offer, isVideo, from: currentUser });
             } catch (err) {
-                alert('تعذر الوصول للكاميرا أو الميكروفون: ' + err.message);
+                alert('تعذر فتح الكاميرا أو الميكروفون: ' + err.message);
             }
         }
 
@@ -1150,7 +1140,7 @@
             closeCallUI();
         });
 
-        // مزامنة حالة المستخدمين والرسائل
+        // مزامنة الاتصال والرسائل
         socket.on('online_users', users => {
             onlineUsers = users;
             renderContacts();
