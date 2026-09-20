@@ -32,7 +32,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// إعداد خادم البريد
+// إعداد البريد الإلكتروني
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 465,
@@ -41,73 +41,52 @@ const transporter = nodemailer.createTransport({
         user: process.env.EMAIL_USER || '',
         pass: process.env.EMAIL_PASS || ''
     },
-    family: 4
+    family: 4,
+    connectionTimeout: 3000
 });
 
 const otpStore = new Map();
 
-// 1. مسار إرسال كود OTP
-app.post('/api/send-otp', async (req, res) => {
+// 1. مسار إرسال رمز OTP الفوري
+app.post('/api/send-otp', (req, res) => {
     const { email, username } = req.body;
     if (!email || !username) {
-        return res.status(400).json({ success: false, message: 'يرجى كتابة اسم المستخدم والبريد الإلكتروني' });
+        return res.status(400).json({ success: false, message: 'يرجى إدخال اسم المستخدم والبريد' });
     }
 
     const cleanEmail = email.trim().toLowerCase();
     const cleanUsername = username.trim().toLowerCase();
 
-    db.get('SELECT * FROM users WHERE LOWER(email) = ? OR LOWER(username) = ?', [cleanEmail, cleanUsername], async (err, user) => {
+    db.get('SELECT * FROM users WHERE LOWER(email) = ? OR LOWER(username) = ?', [cleanEmail, cleanUsername], (err, user) => {
         if (err) return res.status(500).json({ success: false, message: 'خطأ في قاعدة البيانات' });
         if (user) {
-            const msg = user.email.toLowerCase() === cleanEmail ? 'البريد الإلكتروني مسجل مسبقاً' : 'اسم المستخدم محجوز بالفعل';
+            const msg = user.email.toLowerCase() === cleanEmail ? 'البريد الإلكتروني مسجل مسبقاً' : 'اسم المستخدم محجوز مسبقاً';
             return res.status(400).json({ success: false, message: msg });
         }
 
-        // توليد رمز التأكيد
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         otpStore.set(cleanEmail, { otp, expires: Date.now() + 10 * 60 * 1000 });
 
-        console.log(`[OTP] رمز التحقق للمستخدم (${cleanUsername}) هو: ${otp}`);
+        console.log(`[OTP] رمز التحقق لـ (${cleanUsername}): ${otp}`);
 
-        let mailSent = false;
         if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-            try {
-                await transporter.sendMail({
-                    from: `"WhatsApp Web" <${process.env.EMAIL_USER}>`,
-                    to: cleanEmail,
-                    subject: 'رمز تأكيد حسابك في واتساب ويب',
-                    html: `
-            <div dir="rtl" style="font-family: Arial, sans-serif; background-color: #f0f2f5; padding: 25px; text-align: center;">
-              <div style="max-width: 450px; margin: auto; background: white; padding: 25px; border-radius: 10px; border-top: 5px solid #00a884;">
-                <h2 style="color: #005c4b;">واتساب ويب</h2>
-                <p>أهلاً بك <b>${cleanUsername}</b>، رمز التحقق الخاص بك هو:</p>
-                <div style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #00a884; margin: 20px 0; background: #e8f5e9; padding: 12px; border-radius: 8px;">
-                  ${otp}
-                </div>
-                <p style="color: #8696a0; font-size: 12px;">صلاحية هذا الرمز 10 دقائق.</p>
-              </div>
-            </div>
-          `
-                });
-                mailSent = true;
-            } catch (mailErr) {
-                console.warn('تنبيه: Render يحظر منافذ SMTP الخارجية، سيتم تسليم الرمز مباشرة للواجهة.');
-            }
+            transporter.sendMail({
+                from: `"WhatsApp Web" <${process.env.EMAIL_USER}>`,
+                to: cleanEmail,
+                subject: 'رمز تأكيد حسابك في واتساب ويب',
+                html: `<h3>رمز التحقق الخاص بك هو: <b>${otp}</b></h3>`
+            }).catch(() => { });
         }
 
-        // إرسال رد ناجح دائماً مع تمرير الرمز للواجهة لتعبئته تلقائياً
         return res.json({
             success: true,
-            mailSent: mailSent,
             otp: otp,
-            message: mailSent
-                ? 'تم إرسال كود التأكيد إلى بريدك الإلكتروني بنجاح!'
-                : `تم توليد رمز التأكيد وتعبئته تلقائياً: <b>${otp}</b>`
+            message: `تم إنشاء رمز التأكيد بنجاح: <b>${otp}</b>`
         });
     });
 });
 
-// 2. التحقق من الرمز وإنشاء الحساب
+// 2. إنشاء وتفعيل الحساب
 app.post('/api/register', (req, res) => {
     const { username, email, password, otp } = req.body;
     if (!username || !email || !password || !otp) {
@@ -125,7 +104,11 @@ app.post('/api/register', (req, res) => {
     db.run('INSERT INTO users (username, email, password) VALUES (?, ?, ?)', [cleanUsername, cleanEmail, password], function (err) {
         if (err) return res.status(400).json({ success: false, message: 'تعذر إنشاء الحساب: ' + err.message });
         otpStore.delete(cleanEmail);
-        return res.json({ success: true, message: 'تم تفعيل وإنشاء حسابك بنجاح! سجّل دخولك الآن' });
+
+        // إشعار جميع الأجهزة المتصلة لتحديث قائمة الحسابات فوراً
+        io.emit('refresh_users');
+
+        return res.json({ success: true, message: 'تم إنشاء الحساب بنجاح! سجّل دخولك الآن' });
     });
 });
 
@@ -133,29 +116,34 @@ app.post('/api/register', (req, res) => {
 app.post('/api/login', (req, res) => {
     const { identifier, password } = req.body;
     if (!identifier || !password) {
-        return res.status(400).json({ success: false, message: 'يرجى إدخال البيانات' });
+        return res.status(400).json({ success: false, message: 'يرجى ملء جميع الحقول' });
     }
 
     const cleanId = identifier.trim().toLowerCase();
     db.get('SELECT * FROM users WHERE (LOWER(email) = ? OR LOWER(username) = ?) AND password = ?', [cleanId, cleanId, password], (err, user) => {
-        if (err) return res.status(500).json({ success: false, message: 'خطأ في الخادم' });
-        if (!user) return res.status(400).json({ success: false, message: 'بيانات الدخول غير صحيحة' });
+        if (err) return res.status(500).json({ success: false, message: 'خطأ داخلي' });
+        if (!user) return res.status(400).json({ success: false, message: 'بيانات الدخول غير صحيحة، يرجى إنشاء حساب جديد أولاً' });
+
+        // إشعار الأجهزة لتحديث القائمة فور الدخول
+        io.emit('refresh_users');
+
         return res.json({ success: true, username: user.username, email: user.email });
     });
 });
 
-// 4. جلب المستخدمين
+// 4. جلب جميع المستخدمين
 app.get('/api/users', (req, res) => {
     const current = (req.query.current || '').toLowerCase();
-    db.all('SELECT username, email FROM users WHERE LOWER(username) != ? ORDER BY username ASC', [current], (err, rows) => {
+    db.all('SELECT username, email FROM users ORDER BY username ASC', [], (err, rows) => {
         if (err) return res.status(500).json({ success: false, error: err.message });
-        res.json({ success: true, users: rows || [] });
+        const filtered = (rows || []).filter(u => u.username.toLowerCase() !== current);
+        res.json({ success: true, users: filtered });
     });
 });
 
-// 5. رفع المرفقات والصوتيات
+// 5. رفع الملفات والصوتيات
 app.post('/api/upload', upload.single('file'), (req, res) => {
-    if (!req.file) return res.status(400).json({ success: false, message: 'لم يتم رفع ملف' });
+    if (!req.file) return res.status(400).json({ success: false, message: 'لم يتم اختيار ملف' });
     res.json({ success: true, fileUrl: `/uploads/${req.file.filename}`, fileName: req.file.originalname });
 });
 
@@ -169,6 +157,7 @@ io.on('connection', (socket) => {
         socket.username = u;
         onlineUsers.set(u, socket.id);
         io.emit('online_users', Array.from(onlineUsers.keys()));
+        io.emit('refresh_users');
     });
 
     socket.on('get_history', ({ sender, receiver }) => {
@@ -212,7 +201,7 @@ io.on('connection', (socket) => {
         );
     });
 
-    // إشارات مكالمات WebRTC (فيديو وصوت)
+    // مكالمات WebRTC
     socket.on('call_user', ({ to, offer, isVideo, from }) => {
         const targetSocket = onlineUsers.get(to.toLowerCase());
         if (targetSocket) {
@@ -246,6 +235,7 @@ io.on('connection', (socket) => {
         if (socket.username) {
             onlineUsers.delete(socket.username);
             io.emit('online_users', Array.from(onlineUsers.keys()));
+            io.emit('refresh_users');
         }
     });
 });
