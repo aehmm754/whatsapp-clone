@@ -4,6 +4,7 @@ const { Server } = require('socket.io');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
+const nodemailer = require('nodemailer');
 const db = require('./database');
 
 const app = express();
@@ -31,83 +32,120 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
+// إعداد خادم إرسال البريد الإلكتروني عبر Gmail
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
+    auth: {
+        user: process.env.EMAIL_USER || '',
+        pass: process.env.EMAIL_PASS || ''
+    }
+});
+
 // ذاكرة حفظ رموز التأكيد المؤقتة
 const otpStore = new Map();
 
-// 1. مسار إرسال رمز التأكيد إلى البريد الإلكتروني
-app.post('/send-otp', (req, res) => {
+// 1. مسار إرسال كود OTP الحقيقي إلى الإيميل
+app.post('/api/send-otp', async (req, res) => {
     const { email, username } = req.body;
     if (!email || !username) {
-        return res.status(400).json({ success: false, message: 'يرجى إدخال اسم المستخدم والبريد الإلكتروني' });
+        return res.status(400).json({ success: false, message: 'يرجى كتابة اسم المستخدم والبريد الإلكتروني' });
     }
 
     const cleanEmail = email.trim().toLowerCase();
     const cleanUsername = username.trim().toLowerCase();
 
-    // التحقق إن كان البريد أو الاسم مسجلاً مسبقاً
-    db.get('SELECT * FROM users WHERE LOWER(email) = ? OR LOWER(username) = ?', [cleanEmail, cleanUsername], (err, user) => {
-        if (err) return res.status(500).json({ success: false, message: 'خطأ بقاعدة البيانات' });
+    db.get('SELECT * FROM users WHERE LOWER(email) = ? OR LOWER(username) = ?', [cleanEmail, cleanUsername], async (err, user) => {
+        if (err) return res.status(500).json({ success: false, message: 'خطأ في قاعدة البيانات' });
         if (user) {
-            const msg = user.email.toLowerCase() === cleanEmail ? 'البريد الإلكتروني مسجل مسبقاً' : 'اسم المستخدم محجوز مسبقاً';
+            const msg = user.email.toLowerCase() === cleanEmail ? 'البريد الإلكتروني مستخدم مسبقاً' : 'اسم المستخدم محجوز بالفعل';
             return res.status(400).json({ success: false, message: msg });
         }
 
         // توليد رمز تأكيد مكون من 6 أرقام
-        const code = Math.floor(100000 + Math.random() * 900000).toString();
-        otpStore.set(cleanEmail, { code, expires: Date.now() + 10 * 60 * 1000 });
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        otpStore.set(cleanEmail, { otp, expires: Date.now() + 10 * 60 * 1000 });
 
-        // الرد بنجاح مع إرجاع الرمز فوراً لضمان عدم تعليق المستخدم نهائياً
-        return res.json({
-            success: true,
-            message: 'تم توليد رمز التأكيد بنجاح',
-            otp: code
-        });
+        console.log(`[OTP] رمز التحقق للمستخدم (${cleanUsername}) على البريد (${cleanEmail}) هو: ${otp}`);
+
+        // إرسال الرسالة إلى البريد
+        if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+            try {
+                await transporter.sendMail({
+                    from: `"WhatsApp Clone" <${process.env.EMAIL_USER}>`,
+                    to: cleanEmail,
+                    subject: 'رمز تأكيد حسابك في واتساب ويب',
+                    html: `
+            <div dir="rtl" style="font-family: Arial, sans-serif; background-color: #f0f2f5; padding: 25px; text-align: center;">
+              <div style="max-width: 460px; margin: auto; background: #ffffff; padding: 30px; border-radius: 12px; border-top: 5px solid #00a884; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                <h2 style="color: #005c4b; margin-bottom: 10px;">واتساب ويب</h2>
+                <p style="color: #54656f; font-size: 15px;">أهلاً بك <b>${cleanUsername}</b>، رمز التحقق الخاص بك هو:</p>
+                <div style="font-size: 32px; font-weight: bold; letter-spacing: 6px; color: #00a884; margin: 25px 0; background: #e8f5e9; padding: 14px; border-radius: 8px;">
+                  ${otp}
+                </div>
+                <p style="color: #8696a0; font-size: 12.5px;">الرمز صالح لمدة 10 دقائق. يُرجى عدم مشاركته مع أي طرف آخر.</p>
+              </div>
+            </div>
+          `
+                });
+                return res.json({ success: true, message: 'تم إرسال كود التأكيد إلى بريدك الإلكتروني بنجاح!' });
+            } catch (mailErr) {
+                console.error('فشل إرسال البريد عبر Gmail:', mailErr.message);
+                return res.status(500).json({
+                    success: false,
+                    message: 'فشل إرسال البريد. تأكد من تفعيل كلمة مرور التطبيقات في Gmail وصحة EMAIL_USER و EMAIL_PASS في Render.'
+                });
+            }
+        } else {
+            return res.status(500).json({
+                success: false,
+                message: 'بيانات البريد غير معرّفة في سيرفر Render (EMAIL_USER و EMAIL_PASS). يرجى إضافتها في تبويب Environment.'
+            });
+        }
     });
 });
 
-// 2. مسار إنشاء الحساب بعد التحقق من الرمز
-app.post('/register', (req, res) => {
+// 2. مسار التحقق من الرمز وإنشاء الحساب
+app.post('/api/register', (req, res) => {
     const { username, email, password, otp } = req.body;
     if (!username || !email || !password || !otp) {
-        return res.status(400).json({ success: false, message: 'يرجى ملء كافة الحقول وإدخال رمز التأكيد' });
+        return res.status(400).json({ success: false, message: 'يرجى ملء جميع الحقول ورمز التحقق' });
     }
 
     const cleanEmail = email.trim().toLowerCase();
     const cleanUsername = username.trim().toLowerCase();
 
-    const savedOtp = otpStore.get(cleanEmail);
-    if (!savedOtp || savedOtp.code !== otp.trim()) {
-        return res.status(400).json({ success: false, message: 'رمز التأكيد غير صحيح أو انتهت صلاحيته' });
+    const record = otpStore.get(cleanEmail);
+    if (!record || record.otp !== otp.trim() || Date.now() > record.expires) {
+        return res.status(400).json({ success: false, message: 'رمز التأكيد غير صحيح أو منتهي الصلاحية' });
     }
 
     db.run('INSERT INTO users (username, email, password) VALUES (?, ?, ?)', [cleanUsername, cleanEmail, password], function (err) {
-        if (err) {
-            return res.status(400).json({ success: false, message: 'حدث خطأ أثناء التسجيل: ' + err.message });
-        }
+        if (err) return res.status(400).json({ success: false, message: 'تعذر إنشاء الحساب: ' + err.message });
         otpStore.delete(cleanEmail);
-        return res.json({ success: true, message: 'تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول' });
+        return res.json({ success: true, message: 'تم تفعيل وإنشاء حسابك بنجاح! يمكنك الآن تسجيل الدخول' });
     });
 });
 
-// 3. مسار تسجيل الدخول (بالبريد أو اسم المستخدم)
-app.post('/login', (req, res) => {
+// 3. مسار تسجيل الدخول
+app.post('/api/login', (req, res) => {
     const { identifier, password } = req.body;
     if (!identifier || !password) {
-        return res.status(400).json({ success: false, message: 'يرجى إدخال البريد الإلكتروني / اسم المستخدم وكلمة المرور' });
+        return res.status(400).json({ success: false, message: 'يرجى إدخال اسم المستخدم/البريد وكلمة المرور' });
     }
 
     const cleanId = identifier.trim().toLowerCase();
     db.get('SELECT * FROM users WHERE (LOWER(email) = ? OR LOWER(username) = ?) AND password = ?', [cleanId, cleanId, password], (err, user) => {
-        if (err) return res.status(500).json({ success: false, message: 'خطأ في السيرفر' });
-        if (!user) {
-            return res.status(400).json({ success: false, message: 'بيانات الدخول غير صحيحة، يرجى التأكد أو إنشاء حساب جديد' });
-        }
+        if (err) return res.status(500).json({ success: false, message: 'خطأ داخلي في الخادم' });
+        if (!user) return res.status(400).json({ success: false, message: 'بيانات الدخول غير صحيحة، تأكد من بياناتك' });
         return res.json({ success: true, username: user.username, email: user.email });
     });
 });
 
-// 4. جلب قائمة جهات الاتصال
-app.get('/users', (req, res) => {
+// 4. جلب المستخدمين
+app.get('/api/users', (req, res) => {
     const current = (req.query.current || '').toLowerCase();
     db.all('SELECT username, email FROM users WHERE LOWER(username) != ? ORDER BY username ASC', [current], (err, rows) => {
         if (err) return res.status(500).json({ success: false, error: err.message });
@@ -116,8 +154,8 @@ app.get('/users', (req, res) => {
 });
 
 // 5. رفع الملفات والصوتيات
-app.post('/upload', upload.single('file'), (req, res) => {
-    if (!req.file) return res.status(400).json({ success: false, message: 'لم يتم رفع ملف' });
+app.post('/api/upload', upload.single('file'), (req, res) => {
+    if (!req.file) return res.status(400).json({ success: false, message: 'لم يتم رفع أي ملف' });
     res.json({
         success: true,
         fileUrl: `/uploads/${req.file.filename}`,
@@ -125,7 +163,7 @@ app.post('/upload', upload.single('file'), (req, res) => {
     });
 });
 
-// 6. إدارة الدردشة الفورية عبر Socket.io
+// 6. إدارة اتصالات Socket.io والدردشة ومكالمات الصوت والفيديو (WebRTC)
 const onlineUsers = new Map();
 
 io.on('connection', (socket) => {
@@ -139,17 +177,13 @@ io.on('connection', (socket) => {
 
     socket.on('get_history', ({ sender, receiver }) => {
         if (!sender || !receiver) return;
-        const s = sender.toLowerCase();
-        const r = receiver.toLowerCase();
         db.all(
             `SELECT * FROM messages 
        WHERE (LOWER(sender) = ? AND LOWER(receiver) = ?) OR (LOWER(sender) = ? AND LOWER(receiver) = ?) 
        ORDER BY timestamp ASC LIMIT 200`,
-            [s, r, r, s],
+            [sender.toLowerCase(), receiver.toLowerCase(), receiver.toLowerCase(), sender.toLowerCase()],
             (err, rows) => {
-                if (!err && rows) {
-                    socket.emit('chat_history', { receiver: r, messages: rows });
-                }
+                if (!err && rows) socket.emit('chat_history', { receiver: receiver.toLowerCase(), messages: rows });
             }
         );
     });
@@ -174,15 +208,42 @@ io.on('connection', (socket) => {
                         fileName: fileName || '',
                         timestamp: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
                     };
-
                     socket.emit('message_received', msg);
-                    const targetSocket = onlineUsers.get(r);
-                    if (targetSocket) {
-                        io.to(targetSocket).emit('message_received', msg);
-                    }
+                    const target = onlineUsers.get(r);
+                    if (target) io.to(target).emit('message_received', msg);
                 }
             }
         );
+    });
+
+    // إشارات الاتصال الصوتي ومكالمات الفيديو (WebRTC Signaling)
+    socket.on('call_user', ({ to, offer, isVideo, from }) => {
+        const targetSocket = onlineUsers.get(to.toLowerCase());
+        if (targetSocket) {
+            io.to(targetSocket).emit('incoming_call', { from, offer, isVideo });
+        } else {
+            socket.emit('call_failed', { message: 'المستخدم غير متصل حالياً' });
+        }
+    });
+
+    socket.on('answer_call', ({ to, answer }) => {
+        const targetSocket = onlineUsers.get(to.toLowerCase());
+        if (targetSocket) io.to(targetSocket).emit('call_accepted', { answer });
+    });
+
+    socket.on('ice_candidate', ({ to, candidate }) => {
+        const targetSocket = onlineUsers.get(to.toLowerCase());
+        if (targetSocket) io.to(targetSocket).emit('ice_candidate', { candidate });
+    });
+
+    socket.on('reject_call', ({ to }) => {
+        const targetSocket = onlineUsers.get(to.toLowerCase());
+        if (targetSocket) io.to(targetSocket).emit('call_rejected');
+    });
+
+    socket.on('end_call', ({ to }) => {
+        const targetSocket = onlineUsers.get(to.toLowerCase());
+        if (targetSocket) io.to(targetSocket).emit('call_ended');
     });
 
     socket.on('disconnect', () => {

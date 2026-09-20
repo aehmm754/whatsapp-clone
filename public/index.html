@@ -23,7 +23,7 @@
             overflow: hidden;
         }
 
-        /* شاشة تسجيل الدخول والاشتراك */
+        /* شاشة الدخول والتسجيل */
         .auth-overlay {
             position: fixed;
             inset: 0;
@@ -37,7 +37,7 @@
         .auth-card {
             background: #111b21;
             border: 1px solid #222e35;
-            padding: 30px 25px;
+            padding: 30px 24px;
             border-radius: 14px;
             width: 92%;
             max-width: 400px;
@@ -46,7 +46,7 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
         }
 
-        .auth-card .logo-circle {
+        .auth-card .logo {
             width: 68px;
             height: 68px;
             margin: 0 auto 16px;
@@ -133,7 +133,7 @@
             display: block;
         }
 
-        /* الإطار الرئيسي للتطبيق */
+        /* الإطار الرئيسي */
         .app-container {
             width: 100%;
             height: 100vh;
@@ -141,7 +141,6 @@
             background: #111b21;
         }
 
-        /* القائمة الجانبية للمحادثات */
         .sidebar {
             width: 360px;
             border-left: 1px solid #222e35;
@@ -235,7 +234,7 @@
             margin-left: 5px;
         }
 
-        /* شاشة الشات الرئيسية */
+        /* منطقة الشات */
         .chat-area {
             flex: 1;
             display: flex;
@@ -259,13 +258,20 @@
             padding: 10px 16px;
             display: flex;
             align-items: center;
+            justify-content: space-between;
             border-bottom: 1px solid #222e35;
         }
 
-        .chat-header .info {
-            margin-right: 12px;
-            color: #e9edef;
-            font-size: 15.5px;
+        .chat-header .meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .call-btns {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .chat-messages {
@@ -279,7 +285,6 @@
             background-size: 20px 20px;
         }
 
-        /* فقاعات الرسائل */
         .bubble {
             max-width: 65%;
             padding: 8px 12px;
@@ -322,7 +327,6 @@
             outline: none;
         }
 
-        /* شريط الكتابة والتسجيل */
         .chat-footer {
             background: #202c33;
             padding: 8px 14px;
@@ -346,7 +350,7 @@
             background: none;
             border: none;
             color: #8696a0;
-            font-size: 22px;
+            font-size: 20px;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -359,6 +363,7 @@
 
         .icon-btn:hover {
             color: #d1d7db;
+            background: rgba(255, 255, 255, 0.05);
         }
 
         .icon-btn.recording {
@@ -381,6 +386,96 @@
             }
         }
 
+        /* شاشة المكالمات (فيديو / صوت) */
+        .call-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(11, 20, 26, 0.96);
+            display: none;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 2000;
+            padding: 30px 20px;
+        }
+
+        .call-videos {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            height: 68vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        #remote-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #local-video {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 160px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid #00a884;
+            background: #1a1a1a;
+        }
+
+        .call-controls {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .btn-call {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            border: none;
+            color: white;
+            font-size: 22px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+
+        .btn-hangup {
+            background: #ef4444;
+        }
+
+        .btn-accept {
+            background: #10b981;
+        }
+
+        /* تنبيه المكالمة الواردة */
+        .incoming-dialog {
+            position: fixed;
+            top: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #202c33;
+            border: 1px solid #00a884;
+            padding: 15px 25px;
+            border-radius: 30px;
+            display: none;
+            align-items: center;
+            gap: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+            z-index: 3000;
+            color: #e9edef;
+        }
+
         @media (max-width: 768px) {
             .sidebar {
                 width: 100%;
@@ -398,16 +493,55 @@
             .app-container.chat-open .chat-area {
                 display: flex;
             }
+
+            #local-video {
+                width: 110px;
+                height: 85px;
+            }
         }
     </style>
 </head>
 
 <body>
 
-    <!-- واجهة الدخول وإنشاء الحساب مع البريد الإلكتروني ورمز التأكيد -->
+    <!-- نافذة رنين المكالمة الواردة -->
+    <div class="incoming-dialog" id="incoming-dialog">
+        <div style="font-size: 26px;" id="incoming-icon">📞</div>
+        <div>
+            <div id="incoming-caller" style="font-weight: bold; font-size: 15px;"></div>
+            <div style="font-size: 12px; color: #8696a0;" id="incoming-type">مكالمة واردة...</div>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn-call btn-accept" onclick="acceptCall()"
+                style="width: 42px; height: 42px; font-size: 18px;">✔</button>
+            <button class="btn-call btn-hangup" onclick="rejectCall()"
+                style="width: 42px; height: 42px; font-size: 18px;">✖</button>
+        </div>
+    </div>
+
+    <!-- واجهة المكالمة الجارية -->
+    <div class="call-overlay" id="call-overlay">
+        <div style="text-align: center; color: white;">
+            <h3 id="call-target-name" style="font-size: 20px;"></h3>
+            <p id="call-status-text" style="font-size: 14px; color: #00a884; margin-top: 4px;">جاري الاتصال...</p>
+        </div>
+        <div class="call-videos">
+            <video id="remote-video" autoplay playsinline></video>
+            <video id="local-video" autoplay playsinline muted></video>
+        </div>
+        <div class="call-controls">
+            <button class="btn-call" style="background: #2a3942;" id="toggle-audio-btn"
+                onclick="toggleAudioTrack()">🎤</button>
+            <button class="btn-call" style="background: #2a3942;" id="toggle-video-btn"
+                onclick="toggleVideoTrack()">📷</button>
+            <button class="btn-call btn-hangup" onclick="hangUpCall()" title="إنهاء المكالمة">📞</button>
+        </div>
+    </div>
+
+    <!-- واجهة الدخول وإنشاء الحساب مع البريد الإلكتروني ورمز OTP -->
     <div class="auth-overlay" id="auth-overlay">
         <div class="auth-card">
-            <div class="logo-circle">💬</div>
+            <div class="logo">💬</div>
             <h2 id="auth-title">تسجيل الدخول</h2>
             <div id="auth-alert" class="alert-box"></div>
 
@@ -419,20 +553,19 @@
                 <button type="submit" class="btn-main" id="btn-login">دخول</button>
             </form>
 
-            <!-- نموذج إنشاء حساب جديد -->
+            <!-- نموذج إنشاء الحساب بالبريد الفعلي -->
             <form id="form-register" style="display: none;" onsubmit="doRegister(event)">
                 <input type="text" id="reg-user" placeholder="اسم المستخدم" required autocomplete="off">
                 <input type="email" id="reg-email" placeholder="البريد الإلكتروني" required autocomplete="off">
                 <input type="password" id="reg-pass" placeholder="كلمة المرور" required>
 
-                <!-- حقل رمز التأكيد (يظهر بعد طلب الرمز) -->
                 <div id="otp-group" style="display: none;">
-                    <input type="text" id="reg-otp" placeholder="أدخل رمز التأكيد (OTP)" maxlength="6">
+                    <input type="text" id="reg-otp" placeholder="أدخل رمز التحقق (OTP) المستلم على بريدك" maxlength="6">
                 </div>
 
-                <button type="button" class="btn-main" id="btn-send-otp" onclick="requestOtp()">إرسال رمز
-                    التأكيد</button>
-                <button type="submit" class="btn-main" id="btn-complete-reg" style="display: none;">تأكيد وإنشاء
+                <button type="button" class="btn-main" id="btn-send-otp" onclick="requestOtp()">إرسال رمز التأكيد
+                    للبريد</button>
+                <button type="submit" class="btn-main" id="btn-complete-reg" style="display: none;">تأكيد الرمز وإنشاء
                     الحساب</button>
             </form>
 
@@ -440,16 +573,15 @@
         </div>
     </div>
 
-    <!-- الواجهة الأساسية لواتساب ويب -->
+    <!-- تطبيق واتساب ويب -->
     <div class="app-container" id="app-container">
-        <!-- قائمة المحادثات -->
         <div class="sidebar">
             <div class="sidebar-header">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <div class="user-avatar" id="my-avatar">U</div>
                     <span id="my-name" style="color: #e9edef; font-weight: 500;"></span>
                 </div>
-                <button class="icon-btn" onclick="logout()" title="تسجيل الخروج" style="font-size: 18px;">🚪</button>
+                <button class="icon-btn" onclick="logout()" title="تسجيل الخروج">🚪</button>
             </div>
             <div class="search-bar">
                 <input type="text" id="search-input" placeholder="بحث أو بدء محادثة جديدة..." onkeyup="filterUsers()">
@@ -457,23 +589,28 @@
             <ul class="user-list" id="users-list"></ul>
         </div>
 
-        <!-- المحادثة النشطة -->
         <div class="chat-area" id="chat-area">
             <div class="chat-empty" id="chat-empty">
                 <div style="font-size: 64px; margin-bottom: 12px;">📱</div>
                 <h3>واتساب للويب</h3>
-                <p style="margin-top: 6px; font-size: 14px;">اختر جهة اتصال لبدء المحادثة الفورية وتجربة الصوتيات
-                    والمرفقات</p>
+                <p style="margin-top: 6px; font-size: 14px;">اختر مستخدماً من القائمة لبدء المحادثة، المكالمات الصوتية،
+                    ومكالمات الفيديو</p>
             </div>
 
             <div id="chat-content" style="display: none; height: 100%; flex-direction: column;">
                 <div class="chat-header">
-                    <button class="icon-btn" onclick="backToList()" id="back-btn"
-                        style="display: none; margin-left: 8px;">⬅</button>
-                    <div class="user-avatar" id="active-avatar">?</div>
-                    <div class="info">
-                        <div id="active-name" style="font-weight: 500;"></div>
-                        <div id="active-status" style="font-size: 12px; color: #8696a0;"></div>
+                    <div class="meta">
+                        <button class="icon-btn" onclick="backToList()" id="back-btn" style="display: none;">⬅</button>
+                        <div class="user-avatar" id="active-avatar">?</div>
+                        <div>
+                            <div id="active-name" style="font-weight: 500; color: #e9edef;"></div>
+                            <div id="active-status" style="font-size: 12px; color: #8696a0;"></div>
+                        </div>
+                    </div>
+                    <!-- أزرار الاتصال الصوتي ومكالمة الفيديو -->
+                    <div class="call-btns">
+                        <button class="icon-btn" onclick="startCall(false)" title="اتصال صوتي">📞</button>
+                        <button class="icon-btn" onclick="startCall(true)" title="مكالمة فيديو">📹</button>
                     </div>
                 </div>
 
@@ -485,7 +622,7 @@
                         title="إرفاق ملف أو صورة">📎</button>
                     <input type="text" class="text-input" id="message-text" placeholder="اكتب رسالة..."
                         onkeypress="if(event.key==='Enter') sendText()">
-                    <button class="icon-btn" id="mic-btn" onclick="toggleVoice()" title="تسجيل صوتي">🎤</button>
+                    <button class="icon-btn" id="mic-btn" onclick="toggleVoice()" title="تسجيل صوت">🎤</button>
                     <button class="icon-btn" onclick="sendText()" style="color: #00a884;" title="إرسال">➤</button>
                 </div>
             </div>
@@ -500,7 +637,18 @@
         let onlineUsers = [];
         let contacts = [];
 
-        // إعدادات الصوت
+        // إعدادات WebRTC للمكالمات الصوتية والمرئية
+        let peerConnection = null;
+        let localStream = null;
+        let currentCallingUser = null;
+        let incomingCallData = null;
+        let isVideoCallActive = false;
+
+        const rtcConfig = {
+            iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+        };
+
+        // إعدادات تسجيل الصوت
         let mediaRecorder = null;
         let audioChunks = [];
         let isRecording = false;
@@ -521,7 +669,9 @@
                 document.getElementById('form-login').style.display = 'none';
                 document.getElementById('form-register').style.display = 'block';
                 document.getElementById('auth-switch').innerText = 'لديك حساب بالفعل؟ تسجيل الدخول';
-                resetRegisterForm();
+                document.getElementById('otp-group').style.display = 'none';
+                document.getElementById('btn-send-otp').style.display = 'block';
+                document.getElementById('btn-complete-reg').style.display = 'none';
             } else {
                 document.getElementById('auth-title').innerText = 'تسجيل الدخول';
                 document.getElementById('form-login').style.display = 'block';
@@ -530,28 +680,22 @@
             }
         }
 
-        function resetRegisterForm() {
-            document.getElementById('otp-group').style.display = 'none';
-            document.getElementById('btn-send-otp').style.display = 'block';
-            document.getElementById('btn-complete-reg').style.display = 'none';
-        }
-
-        // 1. طلب رمز التأكيد (OTP)
+        // 1. طلب رمز التأكيد على الإيميل
         async function requestOtp() {
             const username = document.getElementById('reg-user').value.trim();
             const email = document.getElementById('reg-email').value.trim();
             const btn = document.getElementById('btn-send-otp');
 
             if (!username || !email) {
-                setAlert('يرجى كتابة اسم المستخدم والبريد الإلكتروني أولاً');
+                setAlert('يرجى ملء اسم المستخدم والبريد الإلكتروني أولاً');
                 return;
             }
 
             btn.disabled = true;
-            btn.innerText = 'جاري إرسال الرمز...';
+            btn.innerText = 'جاري إرسال الرمز للبريد...';
 
             try {
-                const res = await fetch('/send-otp', {
+                const res = await fetch('/api/send-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, email })
@@ -559,23 +703,22 @@
                 const data = await res.json();
 
                 if (res.ok && data.success) {
-                    setAlert(`تم توليد الرمز بنجاح!<br><b>رمز التأكيد الخاص بك هو: <span style="font-size:16px; color:#10b981;">${data.otp}</span></b>`, true);
+                    setAlert(data.message, true);
                     document.getElementById('otp-group').style.display = 'block';
                     document.getElementById('btn-send-otp').style.display = 'none';
                     document.getElementById('btn-complete-reg').style.display = 'block';
-                    document.getElementById('reg-otp').value = data.otp; // تعبئة تلقائية لراحتك
                 } else {
-                    setAlert(data.message || 'تعذر إرسال الرمز');
+                    setAlert(data.message || 'تعذر إرسال الرمز للبريد');
                 }
             } catch (e) {
-                setAlert('فشل الاتصال بالسيرفر، تأكد من الإنترنت');
+                setAlert('فشل الاتصال بالسيرفر، تأكد من اتصال الإنترنت');
             } finally {
                 btn.disabled = false;
-                btn.innerText = 'إرسال رمز التأكيد';
+                btn.innerText = 'إرسال رمز التأكيد للبريد';
             }
         }
 
-        // 2. إتمام إنشاء الحساب
+        // 2. إتمام إنشاء الحساب بعد إدخال الرمز
         async function doRegister(e) {
             e.preventDefault();
             const username = document.getElementById('reg-user').value.trim();
@@ -585,7 +728,7 @@
             const btn = document.getElementById('btn-complete-reg');
 
             if (!otp) {
-                setAlert('يرجى إدخال رمز التأكيد (OTP)');
+                setAlert('يرجى إدخال رمز التحقق المستلم على بريدك');
                 return;
             }
 
@@ -593,7 +736,7 @@
             btn.innerText = 'جاري التحقق...';
 
             try {
-                const res = await fetch('/register', {
+                const res = await fetch('/api/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, email, password, otp })
@@ -602,16 +745,16 @@
 
                 if (res.ok && data.success) {
                     switchAuth();
-                    setAlert('تم إنشاء وتأكيد الحساب بنجاح! سجّل دخولك الآن', true);
+                    setAlert('تم إنشاء الحساب بنجاح! سجّل دخولك الآن', true);
                     document.getElementById('login-id').value = username;
                 } else {
                     setAlert(data.message || 'فشل التسجيل');
                 }
             } catch (e) {
-                setAlert('تعذر إكمال التسجيل، تحقق من الاتصال');
+                setAlert('تعذر إكمال التسجيل');
             } finally {
                 btn.disabled = false;
-                btn.innerText = 'تأكيد وإنشاء الحساب';
+                btn.innerText = 'تأكيد الرمز وإنشاء الحساب';
             }
         }
 
@@ -626,7 +769,7 @@
             btn.innerText = 'جاري تسجيل الدخول...';
 
             try {
-                const res = await fetch('/login', {
+                const res = await fetch('/api/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ identifier, password })
@@ -641,7 +784,7 @@
                     setAlert(data.message || 'بيانات الدخول غير صحيحة');
                 }
             } catch (e) {
-                setAlert('فشل الاتصال بالسيرفر، يرجى المحاولة لاحقاً');
+                setAlert('فشل الاتصال بالسيرفر');
             } finally {
                 btn.disabled = false;
                 btn.innerText = 'دخول';
@@ -663,7 +806,7 @@
 
         async function fetchContacts() {
             try {
-                const res = await fetch(`/users?current=${encodeURIComponent(currentUser)}`);
+                const res = await fetch(`/api/users?current=${encodeURIComponent(currentUser)}`);
                 const data = await res.json();
                 if (data.success) {
                     contacts = data.users;
@@ -707,7 +850,7 @@
             document.getElementById('active-name').innerText = user;
             document.getElementById('active-avatar').innerText = user[0].toUpperCase();
             const isOnline = onlineUsers.includes(user.toLowerCase());
-            document.getElementById('active-status').innerText = isOnline ? 'متصل الآن' : 'غير متصل';
+            document.getElementById('active-status').innerText = isOnline ? 'متصل الآن' : 'آخر ظهور قريباً';
 
             document.getElementById('messages-box').innerHTML = '';
             socket.emit('get_history', { sender: currentUser, receiver: activeChatUser });
@@ -747,7 +890,7 @@
             fd.append('file', file);
 
             try {
-                const res = await fetch('/upload', { method: 'POST', body: fd });
+                const res = await fetch('/api/upload', { method: 'POST', body: fd });
                 const data = await res.json();
                 if (data.success) {
                     const type = file.type.startsWith('image/') ? 'image' : 'file';
@@ -765,7 +908,6 @@
             e.target.value = '';
         }
 
-        // تسجيل الصوت
         async function toggleVoice() {
             const btn = document.getElementById('mic-btn');
             if (!isRecording) {
@@ -781,7 +923,7 @@
                         fd.append('file', blob, 'voice.webm');
 
                         try {
-                            const res = await fetch('/upload', { method: 'POST', body: fd });
+                            const res = await fetch('/api/upload', { method: 'POST', body: fd });
                             const data = await res.json();
                             if (data.success && activeChatUser) {
                                 socket.emit('private_message', {
@@ -798,7 +940,7 @@
                     isRecording = true;
                     btn.classList.add('recording');
                 } catch {
-                    alert('يرجى السماح بالوصول إلى الميكروفون لتسجيل الصوت');
+                    alert('يرجى السماح بالوصول إلى الميكروفون');
                 }
             } else {
                 mediaRecorder.stop();
@@ -821,7 +963,7 @@
             } else if (msg.type === 'audio') {
                 body = `<audio controls src="${msg.content}"></audio>`;
             } else {
-                body = `<a href="${msg.content}" target="_blank" style="color: #53bdeb; text-decoration: underline;">📄 ${escapeHtml(msg.file_name || 'ملف مرفق')}</a>`;
+                body = `<a href="${msg.content}" target="_blank" style="color: #53bdeb; text-decoration: underline;">📄 ${escapeHtml(msg.fileName || 'ملف مرفق')}</a>`;
             }
 
             div.innerHTML = `${body}<div class="bubble-time">${msg.timestamp || ''} ${isMe ? '✓✓' : ''}</div>`;
@@ -833,7 +975,182 @@
             return (t || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         }
 
-        // اتصالات السوكيت المباشرة
+        // ===============================================
+        // منطق المكالمات الصوتية والفيديو المباشرة (WebRTC)
+        // ===============================================
+
+        async function initMedia(video) {
+            isVideoCallActive = video;
+            localStream = await navigator.mediaDevices.getUserMedia({
+                audio: true,
+                video: video
+            });
+            document.getElementById('local-video').srcObject = localStream;
+            document.getElementById('local-video').style.display = video ? 'block' : 'none';
+        }
+
+        function createPeer(targetUser) {
+            peerConnection = new RTCPeerConnection(rtcConfig);
+
+            localStream.getTracks().forEach(track => {
+                peerConnection.addTrack(track, localStream);
+            });
+
+            peerConnection.ontrack = (event) => {
+                document.getElementById('remote-video').srcObject = event.streams[0];
+            };
+
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) {
+                    socket.emit('ice_candidate', { to: targetUser, candidate: event.candidate });
+                }
+            };
+
+            peerConnection.onconnectionstatechange = () => {
+                if (peerConnection.connectionState === 'connected') {
+                    document.getElementById('call-status-text').innerText = 'المكالمة متصلة الآن';
+                }
+            };
+        }
+
+        async function startCall(isVideo) {
+            if (!activeChatUser) return;
+            currentCallingUser = activeChatUser;
+            try {
+                await initMedia(isVideo);
+                createPeer(currentCallingUser);
+
+                document.getElementById('call-target-name').innerText = currentCallingUser;
+                document.getElementById('call-status-text').innerText = isVideo ? 'جاري الاتصال بالفيديو...' : 'جاري الاتصال الصوتي...';
+                document.getElementById('call-overlay').style.display = 'flex';
+
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+
+                socket.emit('call_user', {
+                    to: currentCallingUser,
+                    offer,
+                    isVideo,
+                    from: currentUser
+                });
+            } catch (err) {
+                alert('تعذر الوصول للكاميرا أو الميكروفون: ' + err.message);
+            }
+        }
+
+        socket.on('incoming_call', ({ from, offer, isVideo }) => {
+            incomingCallData = { from, offer, isVideo };
+            document.getElementById('incoming-caller').innerText = from;
+            document.getElementById('incoming-type').innerText = isVideo ? 'مكالمة فيديو واردة...' : 'مكالمة صوتية واردة...';
+            document.getElementById('incoming-icon').innerText = isVideo ? '📹' : '📞';
+            document.getElementById('incoming-dialog').style.display = 'flex';
+        });
+
+        async function acceptCall() {
+            document.getElementById('incoming-dialog').style.display = 'none';
+            if (!incomingCallData) return;
+
+            currentCallingUser = incomingCallData.from;
+            try {
+                await initMedia(incomingCallData.isVideo);
+                createPeer(currentCallingUser);
+
+                document.getElementById('call-target-name').innerText = currentCallingUser;
+                document.getElementById('call-status-text').innerText = 'جاري الاتصال...';
+                document.getElementById('call-overlay').style.display = 'flex';
+
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(incomingCallData.offer));
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+
+                socket.emit('answer_call', { to: currentCallingUser, answer });
+            } catch (err) {
+                alert('تعذر فتح الكاميرا أو الميكروفون: ' + err.message);
+            }
+        }
+
+        function rejectCall() {
+            document.getElementById('incoming-dialog').style.display = 'none';
+            if (incomingCallData) {
+                socket.emit('reject_call', { to: incomingCallData.from });
+                incomingCallData = null;
+            }
+        }
+
+        function hangUpCall() {
+            if (currentCallingUser) {
+                socket.emit('end_call', { to: currentCallingUser });
+            }
+            closeCallUI();
+        }
+
+        function closeCallUI() {
+            if (peerConnection) {
+                peerConnection.close();
+                peerConnection = null;
+            }
+            if (localStream) {
+                localStream.getTracks().forEach(t => t.stop());
+                localStream = null;
+            }
+            document.getElementById('remote-video').srcObject = null;
+            document.getElementById('local-video').srcObject = null;
+            document.getElementById('call-overlay').style.display = 'none';
+            document.getElementById('incoming-dialog').style.display = 'none';
+            currentCallingUser = null;
+            incomingCallData = null;
+        }
+
+        function toggleAudioTrack() {
+            if (localStream) {
+                const audio = localStream.getAudioTracks()[0];
+                if (audio) {
+                    audio.enabled = !audio.enabled;
+                    document.getElementById('toggle-audio-btn').style.background = audio.enabled ? '#2a3942' : '#ef4444';
+                }
+            }
+        }
+
+        function toggleVideoTrack() {
+            if (localStream) {
+                const video = localStream.getVideoTracks()[0];
+                if (video) {
+                    video.enabled = !video.enabled;
+                    document.getElementById('toggle-video-btn').style.background = video.enabled ? '#2a3942' : '#ef4444';
+                }
+            }
+        }
+
+        socket.on('call_accepted', async ({ answer }) => {
+            if (peerConnection) {
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+            }
+        });
+
+        socket.on('ice_candidate', async ({ candidate }) => {
+            try {
+                if (peerConnection && candidate) {
+                    await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+                }
+            } catch (e) { }
+        });
+
+        socket.on('call_rejected', () => {
+            alert('تم رفض المكالمة');
+            closeCallUI();
+        });
+
+        socket.on('call_ended', () => {
+            alert('تم إنهاء المكالمة');
+            closeCallUI();
+        });
+
+        socket.on('call_failed', ({ message }) => {
+            alert(message);
+            closeCallUI();
+        });
+
+        // مزامنة حالة المستخدمين والرسائل
         socket.on('online_users', users => {
             onlineUsers = users;
             renderContacts();
